@@ -1,15 +1,14 @@
 //! CPLEX environment
 use std::path::Path;
 use std::ptr;
-use std::ffi::CStr;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 
 extern crate libc;
 use self::libc::c_int;
 
 use cplex_sys::*;
 use error::Error;
-use param::*;
+use param::ParameterType;
 use cplex::Problem;
 
 /// CPLEX environment
@@ -55,7 +54,7 @@ impl Env {
     /// # Native call
     /// `CPXsetdefaults`
     pub fn set_default_param(&self) -> Result<(), Error> {
-        cpx_call!(CPXsetdefaults, self.env, )
+        cpx_call!(CPXsetdefaults, self.env)
     }
 
     pub fn set_param<T>(&self, what: T, value: T::ValueType) -> Result<(), Error>
