@@ -16,7 +16,7 @@ pub const CPX_PARAM_EPAGAP: c_int = 2008;
 pub const CPX_PARAM_EPGAP: c_int = 2009;
 pub const CPX_PARAM_MIPDISPLAY: c_int = 2012;
 
-//#[link(name = "cplex1260")]
+// #[link(name = "cplex1260")]
 extern "C" {
     pub fn CPXopenCPLEX(status: *mut c_int) -> *mut CPXenv;
 
@@ -41,13 +41,13 @@ extern "C" {
 
     pub fn CPXsetstrparam(env: *mut CPXenv, whichparam: c_int, newvalue: *mut c_char) -> c_int;
 
-    pub fn CPXgetintparam(env: *mut CPXenv, whichparam: c_int, value: *mut c_int) -> c_int;
+    pub fn CPXgetintparam(env: *const CPXenv, whichparam: c_int, value: *mut c_int) -> c_int;
 
-    pub fn CPXgetlongparam(env: *mut CPXenv, whichparam: c_int, value: *mut int64_t) -> c_int;
+    pub fn CPXgetlongparam(env: *const CPXenv, whichparam: c_int, value: *mut int64_t) -> c_int;
 
-    pub fn CPXgetdblparam(env: *mut CPXenv, whichparam: c_int, value: *mut c_double) -> c_int;
+    pub fn CPXgetdblparam(env: *const CPXenv, whichparam: c_int, value: *mut c_double) -> c_int;
 
-    pub fn CPXgetstrparam(env: *mut CPXenv, whichparam: c_int, value: *mut c_char) -> c_int;
+    pub fn CPXgetstrparam(env: *const CPXenv, whichparam: c_int, value: *mut c_char) -> c_int;
 
     pub fn CPXcreateprob(env: *const CPXenv,
                          status: *mut c_int,

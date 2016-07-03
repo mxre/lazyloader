@@ -9,6 +9,44 @@ pub struct DblParameter(i32);
 /// Type for string parameter
 pub struct StrParameter(i32);
 
+
+/// CPX_PARAM_THREADS
+pub const THREADS: IntParameter = IntParameter(CPX_PARAM_THREADS);
+/// CPX_PARAM_TILIM
+pub const TIMELIMIT: DblParameter = DblParameter(CPX_PARAM_TILIM);
+
+/// Parameters driving the MIP algorithm
+pub mod mip {
+	use ::param::*;
+	use ::cplex_sys::*;
+
+    /// CPX_PARAM_MIPDISPLAY
+    pub const DISPLAY: IntParameter = IntParameter(CPX_PARAM_MIPDISPLAY);
+
+	/// Tolorances for the MIP algorithm
+    pub mod tolerances {
+		use ::param::*;
+		use ::cplex_sys::*;
+
+        /// CPX_PARAM_EPAGAP
+        pub const ABSOLUTE_GAP: DblParameter = DblParameter(CPX_PARAM_EPAGAP);
+        /// CPX_PARAM_EPGAP
+        pub const GAP: DblParameter = DblParameter(CPX_PARAM_EPGAP);
+    }
+}
+
+/// Common trait for all parameters
+pub trait ParameterType {
+	/// Type of the paramters value
+    type ValueType;
+
+    /// Setter for the parameter
+    fn set(self, env: *mut CPXenv, value: Self::ValueType) -> Result<(), Error>;
+
+    /// Getter for the parameter
+    fn get(self, env: *const CPXenv) -> Result<Self::ValueType, Error>;
+}
+
 impl From<i32> for DblParameter {
     fn from(param: i32) -> DblParameter {
         DblParameter(param)
@@ -33,38 +71,36 @@ impl From<IntParameter> for i32 {
     }
 }
 
-/// CPX_PARAM_THREADS
-pub const PARAM_THREADS: IntParameter = IntParameter(CPX_PARAM_THREADS);
-/// CPX_PARAM_TILIM
-pub const PARAM_TIMELIMIT: DblParameter = DblParameter(CPX_PARAM_TILIM);
+impl ParameterType for IntParameter {
+    type ValueType = i32;
 
-/// CPX_PARAM_MIPDISPLAY
-pub const PARAM_MIP_DISPLAY: IntParameter = IntParameter(CPX_PARAM_MIPDISPLAY);
-/// CPX_PARAM_EPAGAP
-pub const PARAM_MIP_TOLERANCES_ABSMIPGAP: DblParameter = DblParameter(CPX_PARAM_EPAGAP);
-/// CPX_PARAM_EPGAP
-pub const PARAM_MIP_TOLERANCES_MIPGAP: DblParameter = DblParameter(CPX_PARAM_EPGAP);
+    fn set(self, env: *mut CPXenv, value: i32) -> Result<(), Error> {
+        cpx_call!(CPXsetintparam, env, IntParameter::into(self), value)
+    }
 
-/// Gets and Sets double parameters
-/// # Native calls
-/// `CPXsetdblparam` and `CPXgetdblparam`
-pub trait DblParam {
-    fn set_param(&self, what: DblParameter, value: f64) -> Result<(), Error>;
-    fn get_param(&self, what: DblParameter) -> Result<f64, Error>;
+    fn get(self, env: *const CPXenv) -> Result<i32, Error> {
+        let mut value: i32 = 0;
+        cpx_return!(CPXgetintparam,
+                    value,
+                    env,
+                    IntParameter::into(self),
+                    &mut value)
+    }
 }
 
-/// Gets and Sets integer parameters
-/// # Native calls
-/// `CPXsetintparam` and `CPXgetintparam`
-pub trait IntParam {
-    fn set_param(&self, what: IntParameter, value: i32) -> Result<(), Error>;
-    fn get_param(&self, what: IntParameter) -> Result<i32, Error>;
-}
+impl ParameterType for DblParameter {
+    type ValueType = f64;
 
-/// Gets and Sets string parameters
-/// # Native calls
-/// `CPXsetstrparam` and `CPXgetstrparam`
-pub trait StrParam {
-    fn set_param(&self, what: StrParameter, value: &str) -> Result<(), Error>;
-    fn get_param(&self, what: StrParameter) -> Result<&str, Error>;
+    fn set(self, env: *mut CPXenv, value: f64) -> Result<(), Error> {
+        cpx_call!(CPXsetdblparam, env, DblParameter::into(self), value)
+    }
+
+    fn get(self, env: *const CPXenv) -> Result<f64, Error> {
+        let mut value: f64 = 0.0;
+        cpx_return!(CPXgetdblparam,
+                    value,
+                    env,
+                    DblParameter::into(self),
+                    &mut value)
+    }
 }

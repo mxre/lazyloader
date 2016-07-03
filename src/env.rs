@@ -58,6 +58,18 @@ impl Env {
         cpx_call!(CPXsetdefaults, self.env, )
     }
 
+    pub fn set_param<T>(&self, what: T, value: T::ValueType) -> Result<(), Error>
+        where T: ParameterType
+    {
+        what.set(self.env, value)
+    }
+
+    pub fn get_param<T>(&self, what: T) -> Result<T::ValueType, Error>
+        where T: ParameterType
+    {
+        what.get(self.env)
+    }
+
     /// Write all set parametes into a file
     /// # Native call
     /// `CPXwriteparam`
@@ -82,35 +94,5 @@ impl Drop for Env {
             0 => (),
             _ => println!("{}", Error::new(ptr::null(), status).description()),
         }
-    }
-}
-
-impl IntParam for Env {
-    fn set_param(&self, what: IntParameter, value: i32) -> Result<(), Error> {
-        cpx_call!(CPXsetintparam, self.env, IntParameter::into(what), value)
-    }
-
-    fn get_param(&self, what: IntParameter) -> Result<i32, Error> {
-        let mut value: i32 = 0;
-        cpx_return!(CPXgetintparam,
-                    value,
-                    self.env,
-                    IntParameter::into(what),
-                    &mut value)
-    }
-}
-
-impl DblParam for Env {
-    fn set_param(&self, what: DblParameter, value: f64) -> Result<(), Error> {
-        cpx_call!(CPXsetdblparam, self.env, DblParameter::into(what), value)
-    }
-
-    fn get_param(&self, what: DblParameter) -> Result<f64, Error> {
-        let mut value: f64 = 0.0;
-        cpx_return!(CPXgetdblparam,
-                    value,
-                    self.env,
-                    DblParameter::into(what),
-                    &mut value)
     }
 }
