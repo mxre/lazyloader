@@ -11,9 +11,25 @@ pub struct Error {
     description: String,
 }
 
+pub trait PrivateErrorConstructor {
+    fn new(env: *const cplex_sys::CPXenv, code: i32) -> Error;
+}
+
 impl Error {
+    /// Get the error code
+    pub fn code(&self) -> i32 {
+        self.code
+    }
+
+    /// Get the error description
+    pub fn description(&self) -> &str {
+        self.description.as_str()
+    }
+}
+
+impl PrivateErrorConstructor for Error {
     /// Create a new Error for specific error code
-    pub fn new(env: *const cplex_sys::CPXenv, code: i32) -> Error {
+    fn new(env: *const cplex_sys::CPXenv, code: i32) -> Error {
         unsafe {
             let message =
                 CString::from_vec_unchecked(Vec::with_capacity(cplex_sys::CPXMESSAGEBUFSIZE));
@@ -24,16 +40,6 @@ impl Error {
                 description: CString::from_raw(c_msg).to_str().unwrap().trim().to_string(),
             }
         }
-    }
-
-    /// Get the error code
-    pub fn code(&self) -> i32 {
-        self.code
-    }
-
-    /// Get the error description
-    pub fn description(&self) -> &str {
-        self.description.as_str()
     }
 }
 

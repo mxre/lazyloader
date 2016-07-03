@@ -1,43 +1,164 @@
 //! CPLEX parameter
 use cplex_sys::*;
-use error::Error;
+use error::{Error, PrivateErrorConstructor};
 
 /// Type for integer parameter
 pub struct IntParameter(i32);
+/// Type for long integer parameter
+pub struct LongParameter(i32);
+/// Type for boolean parameter
+pub struct BoolParameter(i32);
 /// Type for numeric parameter
 pub struct DblParameter(i32);
 /// Type for string parameter
 pub struct StrParameter(i32);
 
-
+/// CPX_PARAM_ADVIND
+pub const ADVANCE: IntParameter = IntParameter(CPX_PARAM_ADVIND);
+/// CPX_PARAM_CLOCKTYPE
+pub const CLOCK_TYPE: IntParameter = IntParameter(CPX_PARAM_CLOCKTYPE);
 /// CPX_PARAM_THREADS
 pub const THREADS: IntParameter = IntParameter(CPX_PARAM_THREADS);
 /// CPX_PARAM_TILIM
-pub const TIMELIMIT: DblParameter = DblParameter(CPX_PARAM_TILIM);
+pub const TIME_LIMIT: DblParameter = DblParameter(CPX_PARAM_TILIM);
+/// CPX_PARAM_WORKDIR
+pub const WORK_DIR: StrParameter = StrParameter(CPX_PARAM_WORKDIR);
+/// CPX_PARAM_WORKMEM
+pub const WORK_MEM: DblParameter = DblParameter(CPX_PARAM_WORKMEM);
+
+
+/// Paramter driving alogrithm emphasis
+pub mod emphasis {
+    use ::param::{BoolParameter, IntParameter};
+    use ::cplex_sys::*;
+
+    /// CPX_PARAM_MEMORYEMPHASIS
+    pub const MEMORY: BoolParameter = BoolParameter(CPX_PARAM_MEMORYEMPHASIS);
+    /// CPX_PARAM_MIPEMPHASIS
+    pub const MIP: IntParameter = IntParameter(CPX_PARAM_MIPEMPHASIS);
+    /// CPX_PARAM_NUMERICALEMPHASIS
+    pub const NUMERICAL: BoolParameter = BoolParameter(CPX_PARAM_NUMERICALEMPHASIS);
+}
 
 /// Parameters driving the MIP algorithm
 pub mod mip {
-	use ::param::*;
-	use ::cplex_sys::*;
+    use ::param::{IntParameter, LongParameter};
+    use ::cplex_sys::*;
 
     /// CPX_PARAM_MIPDISPLAY
     pub const DISPLAY: IntParameter = IntParameter(CPX_PARAM_MIPDISPLAY);
+    /// CPX_PARAM_MIPINTERVAL
+    pub const INTERVAL: LongParameter = LongParameter(CPX_PARAM_MIPINTERVAL);
 
-	/// Tolorances for the MIP algorithm
+    pub mod cuts {
+        use ::param::IntParameter;
+        use ::cplex_sys::*;
+
+        /// CPX_PARAM_CLIQUES
+        pub const CLIQUES: IntParameter = IntParameter(CPX_PARAM_CLIQUES);
+        /// CPX_PARAM_COVERS
+        pub const COVERS: IntParameter = IntParameter(CPX_PARAM_COVERS);
+        /// CPX_PARAM_DISJCUTS
+        pub const DISJUNCITVE: IntParameter = IntParameter(CPX_PARAM_DISJCUTS);
+        /// CPX_PARAM_FLOWCOVERS
+        pub const FLOW_COVERS: IntParameter = IntParameter(CPX_PARAM_FLOWCOVERS);
+        /// CPX_PARAM_FRACCUTS
+        pub const GOMORY: IntParameter = IntParameter(CPX_PARAM_FRACCUTS);
+        /// CPX_PARAM_GUBCOVERS
+        pub const GUB_COVERS: IntParameter = IntParameter(CPX_PARAM_GUBCOVERS);
+        /// CPX_PARAM_IMPLBD
+        pub const IMPLIED: IntParameter = IntParameter(CPX_PARAM_IMPLBD);
+        /// CPX_PARAM_LANDPCUTS
+        pub const LIFT_PROJ: IntParameter = IntParameter(CPX_PARAM_LANDPCUTS);
+        /// CPX_PARAM_MCFCUTS
+        pub const MCF_CUT: IntParameter = IntParameter(CPX_PARAM_MCFCUTS);
+        /// CPX_PARAM_MIRCUTS
+        pub const MIR_CUT: IntParameter = IntParameter(CPX_PARAM_MIRCUTS);
+        /// CPX_PARAM_FLOWPATHS
+        pub const PATH_CUT: IntParameter = IntParameter(CPX_PARAM_FLOWPATHS);
+        /// CPX_PARAM_ZEROHALFCUTS
+        pub const ZERO_HALF_CUT: IntParameter = IntParameter(CPX_PARAM_ZEROHALFCUTS);
+    }
+
+    /// Tolerances for the MIP algorithm
     pub mod tolerances {
-		use ::param::*;
-		use ::cplex_sys::*;
+        use ::param::DblParameter;
+        use ::cplex_sys::*;
 
         /// CPX_PARAM_EPAGAP
         pub const ABSOLUTE_GAP: DblParameter = DblParameter(CPX_PARAM_EPAGAP);
+        /// CPX_PARAM_EPLIN
+        pub const LINEARIZATION: DblParameter = DblParameter(CPX_PARAM_EPLIN);
+        /// CPX_PARAM_EPINT
+        pub const INTEGRALITY: DblParameter = DblParameter(CPX_PARAM_EPINT);
+        /// CPX_PARAM_CUTLO
+        pub const LOWER_CUTOFF: DblParameter = DblParameter(CPX_PARAM_CUTLO);
         /// CPX_PARAM_EPGAP
         pub const GAP: DblParameter = DblParameter(CPX_PARAM_EPGAP);
+        /// CPX_PARAM_OBJDIF
+        pub const OBJ_DIFFERENCE: DblParameter = DblParameter(CPX_PARAM_OBJDIF);
+        /// CPX_PARAM_RELOBJDIF
+        pub const REL_OBJ_DIFFERENCE: DblParameter = DblParameter(CPX_PARAM_RELOBJDIF);
+        /// CPX_PARAM_CUTUP
+        pub const UPPER_CUTOFF: DblParameter = DblParameter(CPX_PARAM_CUTUP);
     }
+}
+
+pub mod preprocessing {
+    use ::param::{IntParameter, LongParameter, BoolParameter};
+    use ::cplex_sys::*;
+
+    /// CPX_PARAM_AGGIND
+    pub const AGGREGATOR: IntParameter = IntParameter(CPX_PARAM_AGGIND);
+    /// CPX_PARAM_BNDSTRENIND
+    pub const BOUND_STRENGTH: IntParameter = IntParameter(CPX_PARAM_BNDSTRENIND);
+    /// CPX_PARAM_COEREDIND
+    pub const COEF_REDUCE: IntParameter = IntParameter(CPX_PARAM_COEREDIND);
+    /// CPX_PARAM_DEPIND
+    pub const DEPENDENCY: IntParameter = IntParameter(CPX_PARAM_DEPIND);
+    /// CPX_PARAM_PREDUAL
+    pub const DUAL: IntParameter = IntParameter(CPX_PARAM_PREDUAL);
+    /// CPX_PARAM_AGGFILL
+    pub const FILL: LongParameter = LongParameter(CPX_PARAM_AGGFILL);
+    /// CPX_PARAM_PRELINEAR
+    pub const LINEAR: IntParameter = IntParameter(CPX_PARAM_PRELINEAR);
+    /// CPX_PARAM_PREPASS
+    pub const NUM_PASS: IntParameter = IntParameter(CPX_PARAM_PREPASS);
+    /// CPX_PARAM_PREIND
+    pub const PRESOLVE: BoolParameter = BoolParameter(CPX_PARAM_PREIND);
+    /// CPX_PARAM_CALCQCPDUALS
+    pub const QCP_DUALS: IntParameter = IntParameter(CPX_PARAM_CALCQCPDUALS);
+    /// CPX_PARAM_QPMAKEPSDIND
+    pub const QP_MAKE_PSD: BoolParameter = BoolParameter(CPX_PARAM_QPMAKEPSDIND);
+    /// CPX_PARAM_REDUCE
+    pub const REDUCE: IntParameter = IntParameter(CPX_PARAM_REDUCE);
+    /// CPX_PARAM_RELAXPREIND
+    pub const RELAX: IntParameter = IntParameter(CPX_PARAM_RELAXPREIND);
+    /// CPX_PARAM_REPEATPRESOLVE
+    pub const REPEAT_PRESOLVE: IntParameter = IntParameter(CPX_PARAM_REPEATPRESOLVE);
+    /// CPX_PARAM_SYMMETRY
+    pub const SYMMETRY: IntParameter = IntParameter(CPX_PARAM_SYMMETRY);
+}
+
+pub mod tune {
+    use ::param::{IntParameter, DblParameter};
+    use ::cplex_sys::*;
+
+    /// CPX_PARAM_TUNINGDETTILIM
+    pub const DET_TIME_LIMIT: DblParameter = DblParameter(CPX_PARAM_TUNINGDETTILIM);
+    /// CPX_PARAM_TUNINGDISPLAY
+    pub const DISPLAY: IntParameter = IntParameter(CPX_PARAM_TUNINGDISPLAY);
+    /// CPX_PARAM_TUNINGMEASURE
+    pub const MEASURE: IntParameter = IntParameter(CPX_PARAM_TUNINGMEASURE);
+    /// CPX_PARAM_TUNINGREPEAT
+    pub const REPEAT: IntParameter = IntParameter(CPX_PARAM_TUNINGREPEAT);
+    /// CPX_PARAM_TUNINGTILIM
+    pub const TIME_LIMIT: DblParameter = DblParameter(CPX_PARAM_TUNINGTILIM);
 }
 
 /// Common trait for all parameters
 pub trait ParameterType {
-	/// Type of the paramters value
+    /// Type of the paramters value
     type ValueType;
 
     /// Setter for the parameter
@@ -47,30 +168,7 @@ pub trait ParameterType {
     fn get(self, env: *const CPXenv) -> Result<Self::ValueType, Error>;
 }
 
-impl From<i32> for DblParameter {
-    fn from(param: i32) -> DblParameter {
-        DblParameter(param)
-    }
-}
-
-impl From<DblParameter> for i32 {
-    fn from(param: DblParameter) -> i32 {
-        param.0
-    }
-}
-
-impl From<i32> for IntParameter {
-    fn from(param: i32) -> IntParameter {
-        IntParameter(param)
-    }
-}
-
-impl From<IntParameter> for i32 {
-    fn from(param: IntParameter) -> i32 {
-        param.0
-    }
-}
-
+// IntParameter //////////////////////////////////////////////////////////////////////////////////
 impl ParameterType for IntParameter {
     type ValueType = i32;
 
@@ -88,6 +186,49 @@ impl ParameterType for IntParameter {
     }
 }
 
+impl From<i32> for IntParameter {
+    fn from(param: i32) -> IntParameter {
+        IntParameter(param)
+    }
+}
+
+impl From<IntParameter> for i32 {
+    fn from(param: IntParameter) -> i32 {
+        param.0
+    }
+}
+
+/// LongParameter ////////////////////////////////////////////////////////////////////////////////
+impl ParameterType for LongParameter {
+    type ValueType = i64;
+
+    fn set(self, env: *mut CPXenv, value: i64) -> Result<(), Error> {
+        cpx_call!(CPXsetlongparam, env, LongParameter::into(self), value)
+    }
+
+    fn get(self, env: *const CPXenv) -> Result<i64, Error> {
+        let mut value: i64 = 0;
+        cpx_return!(CPXgetlongparam,
+                    value,
+                    env,
+                    LongParameter::into(self),
+                    &mut value)
+    }
+}
+
+impl From<i32> for LongParameter {
+    fn from(param: i32) -> LongParameter {
+        LongParameter(param)
+    }
+}
+
+impl From<LongParameter> for i32 {
+    fn from(param: LongParameter) -> i32 {
+        param.0
+    }
+}
+
+// DblParameter //////////////////////////////////////////////////////////////////////////////////
 impl ParameterType for DblParameter {
     type ValueType = f64;
 
@@ -102,5 +243,60 @@ impl ParameterType for DblParameter {
                     env,
                     DblParameter::into(self),
                     &mut value)
+    }
+}
+
+impl From<i32> for DblParameter {
+    fn from(param: i32) -> DblParameter {
+        DblParameter(param)
+    }
+}
+
+impl From<DblParameter> for i32 {
+    fn from(param: DblParameter) -> i32 {
+        param.0
+    }
+}
+
+// BoolParameter /////////////////////////////////////////////////////////////////////////////////
+impl ParameterType for BoolParameter {
+    type ValueType = bool;
+
+    fn set(self, env: *mut CPXenv, value: bool) -> Result<(), Error> {
+        cpx_call!(CPXsetintparam, env, BoolParameter::into(self), value as i32)
+    }
+
+    fn get(self, env: *const CPXenv) -> Result<bool, Error> {
+        let mut value: i32 = 0;
+        cpx_return!(CPXgetintparam,
+                    value == 1,
+                    env,
+                    BoolParameter::into(self),
+                    &mut value)
+    }
+}
+
+impl From<i32> for BoolParameter {
+    fn from(param: i32) -> BoolParameter {
+        BoolParameter(param)
+    }
+}
+
+impl From<BoolParameter> for i32 {
+    fn from(param: BoolParameter) -> i32 {
+        param.0
+    }
+}
+
+// StrParameter //////////////////////////////////////////////////////////////////////////////////
+impl From<i32> for StrParameter {
+    fn from(param: i32) -> StrParameter {
+        StrParameter(param)
+    }
+}
+
+impl From<StrParameter> for i32 {
+    fn from(param: StrParameter) -> i32 {
+        param.0
     }
 }

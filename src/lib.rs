@@ -7,10 +7,10 @@ mod cplex_sys;
 #[macro_use]
 mod macros;
 
-pub mod error;
+mod error;
 pub mod param;
-pub mod env;
-pub mod cplex;
+mod env;
+mod cplex;
 
 pub use error::Error;
 pub use cplex::Problem;

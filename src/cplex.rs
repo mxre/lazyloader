@@ -1,8 +1,13 @@
 //! CPLEX problem and solver
 use std::path::Path;
 use std::ffi::CString;
+
+extern crate libc;
+use self::libc::c_int;
+
 use cplex_sys::*;
-use error::Error;
+use error::{Error, PrivateErrorConstructor};
+use env;
 
 /// LP problem and solver
 pub struct Problem {
@@ -11,6 +16,24 @@ pub struct Problem {
 }
 
 impl Problem {
+    /// Create a CPLEX LP problem in the environment
+    /// # Native call
+    /// `CPXcreateprob`
+    pub fn new(e: &env::Env, name: &str) -> Result<Problem, Error> {
+        let mut status = 0 as c_int;
+        let lp = unsafe { CPXcreateprob(e.env, &mut status, str_as_ptr!(name)) };
+        match status {
+            0 => {
+                assert!(!lp.is_null());
+                Ok(Problem {
+                    env: e.env,
+                    lp: lp,
+                })
+            }
+            _ => Err(Error::new(e.env, status)),
+        }
+    }
+
     /// Run CPLEX optimize
     /// # Native call
     /// `CPXmipopt`

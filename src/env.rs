@@ -7,13 +7,12 @@ extern crate libc;
 use self::libc::c_int;
 
 use cplex_sys::*;
-use error::Error;
+use error::{Error, PrivateErrorConstructor};
 use param::ParameterType;
-use cplex::Problem;
 
 /// CPLEX environment
 pub struct Env {
-    env: *mut CPXenv,
+    pub env: *mut CPXenv,
 }
 
 impl Env {
@@ -32,24 +31,6 @@ impl Env {
         }
     }
 
-    /// Create a CPLEX LP problem in the environment
-    /// # Native call
-    /// `CPXcreateprob`
-    pub fn create_problem(&self, name: &str) -> Result<Problem, Error> {
-        let mut status = 0 as c_int;
-        let lp = unsafe { CPXcreateprob(self.env, &mut status, str_as_ptr!(name)) };
-        match status {
-            0 => {
-                assert!(!lp.is_null());
-                Ok(Problem {
-                    env: self.env,
-                    lp: lp,
-                })
-            }
-            _ => Err(Error::new(self.env, status)),
-        }
-    }
-
     /// Set CPLEX default parameters
     /// # Native call
     /// `CPXsetdefaults`
@@ -57,7 +38,7 @@ impl Env {
         cpx_call!(CPXsetdefaults, self.env)
     }
 
-    pub fn set_param<T>(&self, what: T, value: T::ValueType) -> Result<(), Error>
+    pub fn set_param<T>(&mut self, what: T, value: T::ValueType) -> Result<(), Error>
         where T: ParameterType
     {
         what.set(self.env, value)
@@ -81,7 +62,7 @@ impl Env {
     /// Get the CPLEX version as a string
     /// # Native call
     /// `CPXversion`
-    pub fn version(&mut self) -> &str {
+    pub fn version(&self) -> &str {
         ptr_as_str!(CPXversion(self.env))
     }
 }
