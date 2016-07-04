@@ -166,53 +166,62 @@ pub const CPX_PARAM_RAMPUPTILIM: c_int = 2165;
 pub const CPX_PARAM_CALCQCPDUALS: c_int = 4003;
 pub const CPX_PARAM_QPMAKEPSDIND: c_int = 4010;
 
+#[cfg(target_pointer_width = "64")]
+pub type CPXNNZ = int64_t;
+
+#[cfg(target_pointer_width = "64")]
+pub type CPXCNT = int64_t;
+
+#[cfg(target_pointer_width = "64")]
+pub type CPXDIM = c_int;
+
 // #[link(name = "cplex1260")]
 extern "C" {
-    pub fn CPXopenCPLEX(status: *mut c_int) -> *mut CPXenv;
+    pub fn CPXLopenCPLEX(status: *mut c_int) -> *mut CPXenv;
 
-    pub fn CPXcloseCPLEX(env: &*mut CPXenv) -> c_int;
+    pub fn CPXLcloseCPLEX(env: &*mut CPXenv) -> c_int;
 
-    pub fn CPXgeterrorstring(env: *const CPXenv,
+    pub fn CPXLgeterrorstring(env: *const CPXenv,
                              status: c_int,
                              message: *mut c_char)
                              -> *const c_char;
 
-    pub fn CPXversion(env: *const CPXenv) -> *const c_char;
+    pub fn CPXLversion(env: *const CPXenv) -> *const c_char;
 
-    pub fn CPXversionnumber(env: *const CPXenv) -> *const c_char;
+    pub fn CPXLversionnumber(env: *const CPXenv) -> *const c_char;
 
-    pub fn CPXsetdefaults(env: *mut CPXenv) -> c_int;
+    pub fn CPXLsetdefaults(env: *mut CPXenv) -> c_int;
 
-    pub fn CPXsetintparam(env: *mut CPXenv, whichparam: c_int, newvalue: c_int) -> c_int;
+    pub fn CPXLsetintparam(env: *mut CPXenv, whichparam: c_int, newvalue: c_int) -> c_int;
 
-    pub fn CPXsetlongparam(env: *mut CPXenv, whichparam: c_int, newvalue: int64_t) -> c_int;
+    pub fn CPXLsetlongparam(env: *mut CPXenv, whichparam: c_int, newvalue: int64_t) -> c_int;
 
-    pub fn CPXsetdblparam(env: *mut CPXenv, whichparam: c_int, newvalue: c_double) -> c_int;
+    pub fn CPXLsetdblparam(env: *mut CPXenv, whichparam: c_int, newvalue: c_double) -> c_int;
 
-    pub fn CPXsetstrparam(env: *mut CPXenv, whichparam: c_int, newvalue: *const c_char) -> c_int;
+    pub fn CPXLsetstrparam(env: *mut CPXenv, whichparam: c_int, newvalue: *const c_char) -> c_int;
 
-    pub fn CPXgetintparam(env: *const CPXenv, whichparam: c_int, value: *mut c_int) -> c_int;
+    pub fn CPXLgetintparam(env: *const CPXenv, whichparam: c_int, value: *mut c_int) -> c_int;
 
-    pub fn CPXgetlongparam(env: *const CPXenv, whichparam: c_int, value: *mut int64_t) -> c_int;
+    pub fn CPXLgetlongparam(env: *const CPXenv, whichparam: c_int, value: *mut int64_t) -> c_int;
 
-    pub fn CPXgetdblparam(env: *const CPXenv, whichparam: c_int, value: *mut c_double) -> c_int;
+    pub fn CPXLgetdblparam(env: *const CPXenv, whichparam: c_int, value: *mut c_double) -> c_int;
 
-    pub fn CPXgetstrparam(env: *const CPXenv, whichparam: c_int, value: *mut c_char) -> c_int;
+    pub fn CPXLgetstrparam(env: *const CPXenv, whichparam: c_int, value: *mut c_char) -> c_int;
 
-    pub fn CPXcreateprob(env: *const CPXenv,
+    pub fn CPXLcreateprob(env: *const CPXenv,
                          status: *mut c_int,
                          probname: *const c_char)
                          -> *mut CPXlp;
 
-    pub fn CPXfreeprob(env: *const CPXenv, lp: &*mut CPXlp) -> c_int;
+    pub fn CPXLfreeprob(env: *const CPXenv, lp: &*mut CPXlp) -> c_int;
 
-    pub fn CPXgetnumrows(env: *const CPXenv, lp: *const CPXlp) -> c_int;
+    pub fn CPXLgetnumrows(env: *const CPXenv, lp: *const CPXlp) -> CPXDIM;
 
-    pub fn CPXgetnumcols(env: *const CPXenv, lp: *const CPXlp) -> c_int;
+    pub fn CPXLgetnumcols(env: *const CPXenv, lp: *const CPXlp) -> CPXDIM;
 
-    pub fn CPXnewcols(env: *const CPXenv,
+    pub fn CPXLnewcols(env: *const CPXenv,
                       lp: *mut CPXlp,
-                      ccnt: c_int,
+                      ccnt: CPXCNT,
                       obj: *const c_double,
                       lb: *const c_double,
                       ub: *const c_double,
@@ -220,86 +229,88 @@ extern "C" {
                       colname: *const *const c_char)
                       -> c_int;
 
-    pub fn CPXnewrows(env: *const CPXenv,
+    pub fn CPXLnewrows(env: *const CPXenv,
                       lp: *mut CPXlp,
-                      rcnt: c_int,
+                      rcnt: CPXDIM,
                       rhs: *const c_double,
                       sense: *const c_char,
                       rngval: *const c_double,
                       rowname: *const *const c_char)
                       -> c_int;
 
-    pub fn CPXchgcoef(env: *const CPXenv,
+    pub fn CPXLchgcoef(env: *const CPXenv,
                       lp: *mut CPXlp,
-                      i: c_int,
-                      j: c_int,
+                      i: CPXDIM,
+                      j: CPXDIM,
                       newvalue: c_double)
                       -> c_int;
 
-    pub fn CPXchgbds(env: *const CPXenv,
+    pub fn CPXLchgbds(env: *const CPXenv,
                      lp: *mut CPXlp,
-                     cnt: c_int,
-                     indices: *const c_int,
+                     cnt: CPXDIM,
+                     indices: *const CPXDIM,
                      lu: *const c_char,
                      bd: *const c_double)
                      -> c_int;
 
-    pub fn CPXchgobjsen(env: *const CPXenv, lp: *mut CPXlp, max_or_min: c_int) -> c_int;
+    pub fn CPXLchgobjsen(env: *const CPXenv, lp: *mut CPXlp, max_or_min: c_int) -> c_int;
 
-    pub fn CPXcopylp(env: *const CPXenv,
+    pub fn CPXLcopylpwnames(env: *const CPXenv,
                      lp: *mut CPXlp,
-                     numcols: c_int,
-                     numrows: c_int,
+                     numcols: CPXDIM,
+                     numrows: CPXDIM,
                      objsense: c_int,
                      objective: *const c_double,
                      rhs: *const c_double,
                      sense: *const c_char,
-                     matbeg: *const int64_t,
-                     matcnt: *const c_int,
-                     matind: *const c_int,
+                     matbeg: *const CPXNNZ,
+                     matcnt: *const CPXDIM,
+                     matind: *const CPXDIM,
                      matval: *const c_double,
                      lb: *const c_double,
                      ub: *const c_double,
-                     rngval: *const c_double)
+                     rngval: *const c_double,
+                     colname: *const *const c_char,
+                     rowname: *const *const c_char)
                      -> c_int;
 
-    pub fn CPXcopyctype(env: *const CPXenv, lp: *mut CPXlp, ctype: *const c_char) -> c_int;
+    pub fn CPXLcopyctype(env: *const CPXenv, lp: *mut CPXlp, ctype: *const c_char) -> c_int;
 
-    pub fn CPXpresolve(env: *const CPXenv, lp: *mut CPXlp, method: c_int) -> c_int;
+    pub fn CPXLpresolve(env: *const CPXenv, lp: *mut CPXlp, method: c_int) -> c_int;
 
-    pub fn CPXmipopt(env: *const CPXenv, lp: *mut CPXlp) -> c_int;
+    pub fn CPXLmipopt(env: *const CPXenv, lp: *mut CPXlp) -> c_int;
 
-    pub fn CPXlpopt(env: *const CPXenv, lp: *mut CPXlp) -> c_int;
+    pub fn CPXLlpopt(env: *const CPXenv, lp: *mut CPXlp) -> c_int;
 
-    pub fn CPXprimopt(env: *const CPXenv, lp: *mut CPXlp) -> c_int;
+    pub fn CPXLprimopt(env: *const CPXenv, lp: *mut CPXlp) -> c_int;
 
-    pub fn CPXgetstat(env: *const CPXenv, lp: *const CPXlp) -> c_int;
+    pub fn CPXLgetstat(env: *const CPXenv, lp: *const CPXlp) -> c_int;
 
-    pub fn CPXgetstatstring(env: *const CPXenv,
+    pub fn CPXLgetstatstring(env: *const CPXenv,
                             status: c_int,
                             message: *mut c_char)
                             -> *const c_char;
 
-    pub fn CPXgetobjval(env: *const CPXenv, lp: *mut CPXlp, objval: *mut c_double) -> c_int;
+    pub fn CPXLgetobjval(env: *const CPXenv, lp: *mut CPXlp, objval: *mut c_double) -> c_int;
 
-    pub fn CPXgetx(env: *const CPXenv,
+    pub fn CPXLgetx(env: *const CPXenv,
                    lp: *const CPXlp,
                    x: *mut c_double,
-                   begin: c_int,
-                   end: c_int)
+                   begin: CPXDIM,
+                   end: CPXDIM)
                    -> c_int;
 
-    pub fn CPXsolution(env: *const CPXenv,
+    pub fn CPXLsolution(env: *const CPXenv,
                        lp: *const CPXlp,
                        lpstat: *mut c_int,
-                       objval: *mut c_int,
+                       objval: *mut c_double,
                        x: *mut c_double,
                        pi: *mut c_double,
                        slack: *mut c_double,
                        dj: *mut c_double)
                        -> c_int;
 
-    pub fn CPXsolninfo(env: *const CPXenv,
+    pub fn CPXLsolninfo(env: *const CPXenv,
                        lp: *mut CPXlp,
                        solnmethod: *mut c_int,
                        solntype: *mut c_int,
@@ -307,11 +318,11 @@ extern "C" {
                        dfeasind: *mut c_int)
                        -> c_int;
 
-    pub fn CPXgettime(env: *const CPXenv, timestamp: *mut c_double) -> c_int;
+    pub fn CPXLgettime(env: *const CPXenv, timestamp: *mut c_double) -> c_int;
 
-    pub fn CPXwriteparam(env: *const CPXenv, filename: *const c_char) -> c_int;
+    pub fn CPXLwriteparam(env: *const CPXenv, filename: *const c_char) -> c_int;
 
-    pub fn CPXwriteprob(env: *const CPXenv,
+    pub fn CPXLwriteprob(env: *const CPXenv,
                         lp: *const CPXlp,
                         filename: *const c_char,
                         filetype: *const c_char)

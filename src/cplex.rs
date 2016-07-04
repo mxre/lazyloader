@@ -20,10 +20,10 @@ pub struct Problem {
 impl Problem {
     /// Create a CPLEX LP problem in the environment
     /// # Native call
-    /// `CPXcreateprob`
+    /// `CPXLcreateprob`
     pub fn new(e: &env::Env, name: &str) -> Result<Self, Error> {
         let mut status = 0 as c_int;
-        let lp = unsafe { CPXcreateprob(e.env, &mut status, str_as_ptr!(name)) };
+        let lp = unsafe { CPXLcreateprob(e.env, &mut status, str_as_ptr!(name)) };
         match status {
             0 => {
                 assert!(!lp.is_null());
@@ -38,36 +38,36 @@ impl Problem {
 
     /// Run CPLEX optimize
     /// # Native call
-    /// `CPXmipopt`
+    /// `CPXLmipopt`
     pub fn solve(&mut self) -> Result<(), Error> {
-        cpx_call!(CPXmipopt, self.env, &mut *self.lp)
+        cpx_call!(CPXLmipopt, self.env, &mut *self.lp)
     }
 
     /// Get the numeric CPLEX status
     /// # Native call
-    /// `CPXgetstat`
+    /// `CPXLgetstat`
     pub fn get_status(&self) -> i32 {
-        unsafe { CPXgetstat(self.env, self.lp) }
+        unsafe { CPXLgetstat(self.env, self.lp) }
     }
 
     /// Get the textual representation of the CPLEX status
     /// # Native call
-    /// `CPXgetstat` and `CPXgetstatstring`
+    /// `CPXLgetstat` and `CPXLgetstatstring`
     pub fn get_status_text(&self) -> String {
         unsafe {
             let status = self.get_status();
             let message = CString::from_vec_unchecked(Vec::with_capacity(CPXMESSAGEBUFSIZE));
             let c_msg = message.into_raw();
-            CPXgetstatstring(self.env, status, c_msg);
+            CPXLgetstatstring(self.env, status, c_msg);
             CString::from_raw(c_msg).to_str().unwrap().to_string()
         }
     }
 
     /// Write the LP problem to a file
     /// # Native call
-    /// `CPXwriteprob`
+    /// `CPXLwriteprob`
     pub fn write_problem<P: AsRef<Path>>(&self, file: P, filetype: &str) -> Result<(), Error> {
-        cpx_call!(CPXwriteprob,
+        cpx_call!(CPXLwriteprob,
                   self.env,
                   self.lp,
                   str_as_ptr!(file.as_ref().to_string_lossy().to_mut().as_str()),
@@ -82,7 +82,7 @@ impl Problem {
 
 impl Drop for Problem {
     fn drop(&mut self) {
-        match unsafe { CPXfreeprob(self.env, &mut &self.lp) } {
+        match unsafe { CPXLfreeprob(self.env, &mut &self.lp) } {
             0 => (),
             s => println!("{}", Error::new(self.env, s).description()),
         }
@@ -126,7 +126,7 @@ impl Raw for Problem {
                                            } else {
                                                ptr::null()
                                            }];
-        cpx_call!(CPXnewrows,
+        cpx_call!(CPXLnewrows,
                   self.env,
                   self.lp,
                   1,
@@ -149,7 +149,7 @@ impl Raw for Problem {
                                            } else {
                                                ptr::null()
                                            }];
-        cpx_call!(CPXnewcols,
+        cpx_call!(CPXLnewcols,
                   self.env,
                   self.lp,
                   1,
@@ -161,22 +161,22 @@ impl Raw for Problem {
     }
 
     fn get_num_rows(&self) -> i32 {
-        unsafe { CPXgetnumrows(self.env, self.lp) }
+        unsafe { CPXLgetnumrows(self.env, self.lp) }
     }
 
     fn get_num_cols(&self) -> i32 {
-        unsafe { CPXgetnumcols(self.env, self.lp) }
+        unsafe { CPXLgetnumcols(self.env, self.lp) }
     }
 
     fn set_coefficent(&mut self, i: i32, j: i32, coef: f64) -> Result<(), Error> {
-        cpx_call!(CPXchgcoef, self.env, self.lp, i, j, coef)
+        cpx_call!(CPXLchgcoef, self.env, self.lp, i, j, coef)
     }
 
     fn get_x(&self, begin: i32, end: i32) -> Result<Vec<f64>, Error> {
         let sz = (end - begin + 1) as usize;
         let mut v = Vec::with_capacity(sz);
         v.resize(sz, 0.0);
-        cpx_return!(CPXgetx,
+        cpx_return!(CPXLgetx,
                     {
                         v
                     },
@@ -188,6 +188,6 @@ impl Raw for Problem {
     }
 
     fn set_objective_sense(&mut self, sense: model::Objective) -> Result<(), Error> {
-        cpx_call!(CPXchgobjsen, self.env, self.lp, sense as c_int)
+        cpx_call!(CPXLchgobjsen, self.env, self.lp, sense as c_int)
     }
 }

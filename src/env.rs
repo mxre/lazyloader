@@ -18,10 +18,10 @@ pub struct Env {
 impl Env {
     /// Create a new CPLEX environment
     /// # Native call
-    /// `CPXopenCPLEX`
+    /// `CPXLopenCPLEX`
     pub fn new() -> Result<Self, Error> {
         let mut status = 0 as c_int;
-        let env = unsafe { CPXopenCPLEX(&mut status) };
+        let env = unsafe { CPXLopenCPLEX(&mut status) };
         match status {
             0 => {
                 assert!(!env.is_null());
@@ -33,9 +33,9 @@ impl Env {
 
     /// Set CPLEX default parameters
     /// # Native call
-    /// `CPXsetdefaults`
+    /// `CPXLsetdefaults`
     pub fn set_default_param(&self) -> Result<(), Error> {
-        cpx_call!(CPXsetdefaults, self.env)
+        cpx_call!(CPXLsetdefaults, self.env)
     }
 
     /// Set a CPLEX parameter
@@ -50,24 +50,24 @@ impl Env {
 
     /// Write all set parametes into a file
     /// # Native call
-    /// `CPXwriteparam`
+    /// `CPXLwriteparam`
     pub fn write_param<P: AsRef<Path>>(&self, file: P) -> Result<(), Error> {
-        cpx_call!(CPXwriteparam,
+        cpx_call!(CPXLwriteparam,
                   self.env,
                   str_as_ptr!(file.as_ref().to_string_lossy().to_mut().as_str()))
     }
 
     /// Get the CPLEX version as a string
     /// # Native call
-    /// `CPXversion`
+    /// `CPXLversion`
     pub fn version(&self) -> &str {
-        ptr_as_str!(CPXversion(self.env))
+        ptr_as_str!(CPXLversion(self.env))
     }
 }
 
 impl Drop for Env {
     fn drop(&mut self) {
-        match unsafe { CPXcloseCPLEX(&mut &self.env) } {
+        match unsafe { CPXLcloseCPLEX(&mut &self.env) } {
             0 => (),
             s => println!("{}", Error::new(ptr::null(), s).description()),
         }

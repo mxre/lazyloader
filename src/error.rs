@@ -34,7 +34,7 @@ impl PrivateErrorConstructor for Error {
             let message =
                 CString::from_vec_unchecked(Vec::with_capacity(cplex_sys::CPXMESSAGEBUFSIZE));
             let c_msg = message.into_raw();
-            cplex_sys::CPXgeterrorstring(env, code, c_msg);
+            cplex_sys::CPXLgeterrorstring(env, code, c_msg);
             Error {
                 code: code,
                 description: CString::from_raw(c_msg).to_str().unwrap().trim().to_string(),
