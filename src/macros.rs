@@ -8,7 +8,7 @@ macro_rules! cpx_return {
     };
 
     ($func:ident, $value:expr, $env:expr, $($arg:expr),*) => {{
-        if cfg!(test) {
+        if cfg!(feature="cpx_call_log") {
             println!("[calling {}]", stringify!($func));
         }
         match unsafe { $func( $env, $($arg),* ) } {

@@ -29,6 +29,14 @@ fn test_version() {
 }
 
 #[test]
+#[should_panic]
+fn provoke() {
+    let e = Env::new().unwrap();
+    let mut lp = Problem::new(&e, "test").unwrap();
+    lp.set_coefficent(0, 0, 1.0).unwrap();
+}
+
+#[test]
 fn param_dbl() {
     let mut e = Env::new().unwrap();
     e.set_param(cplex::param::mip::tolerances::GAP, 0.01).unwrap();
