@@ -17,4 +17,6 @@ rpath = false
 lto = false
 debug-assertions = true
 panic = 'unwind'
-customfeature = [ "cpx_call_log" ]
+
+[features]
+cpx_call_log = []
