@@ -14,7 +14,7 @@ static CPLEX_DEFAULT: &'static str = "/opt/ibm/ILOG/CPLEX_Studio126";
 #[cfg(target_os = "linux")]
 static CPLEX_SUBPATH: &'static str = "cplex/bin/x86-64_linux";
 #[cfg(target_os = "linux")]
-static CPLEX_LIBRARY_NAME: &'static str = "libcplex*.so";
+static CPLEX_LIBRARY_NAME: &'static str = "libcplex12[0-9][0-9].so";
 
 #[cfg(target_os = "windows")]
 static CPLEX_ENVIRONMENT_VAR: &'static str = "CPLEX_STUDIO_DIR126";
@@ -23,7 +23,7 @@ static CPLEX_DEFAULT: &'static str = "C:\\Program Files\\IBM\\ILOG\\CPLEX_Studio
 #[cfg(target_os = "windows")]
 static CPLEX_SUBPATH: &'static str = "cplex\\bin\\x64_win64";
 #[cfg(target_os = "windows")]
-static CPLEX_LIBRARY_NAME: &'static str = "cplex*.dll";
+static CPLEX_LIBRARY_NAME: &'static str = "cplex12[0-9][0-9].dll";
 
 fn get_cplex_library_name(cpxpath: &PathBuf) -> PathBuf {
     for entry in glob(cpxpath.join(CPLEX_LIBRARY_NAME).to_str().unwrap()).unwrap() {
