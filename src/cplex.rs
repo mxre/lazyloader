@@ -91,51 +91,103 @@ impl Drop for Problem {
 
 /// Acessing CPLEX model directly
 pub trait Raw {
-	/// Add an empty new row, i.e. a new constraint to the model
-	fn new_row(&mut self, rhs: f64, sense: char, name: Option<&str>) -> Result<(), Error>;
+    /// Add an empty new row, i.e. a new constraint to the model
+    fn new_row(&mut self, rhs: f64, sense: model::Sense, name: Option<&str>) -> Result<(), Error>;
 
-	/// Add an empty column, i.e. a new variable to the model
-	fn new_col(&mut self, obj: f64, lb: f64, ub: f64, ctype: char, name: Option<&str>) -> Result<(), Error>;
+    /// Add an empty column, i.e. a new variable to the model
+    fn new_col(&mut self,
+               obj: f64,
+               lb: f64,
+               ub: f64,
+               ctype: model::VarType,
+               name: Option<&str>)
+               -> Result<(), Error>;
 
-	/// Get the current number of rows
-	fn get_num_rows(&self) -> i32;
+    /// Get the current number of rows
+    fn get_num_rows(&self) -> i32;
 
-	/// Get the current number of columns
-	fn get_num_cols(&self) -> i32;
+    /// Get the current number of columns
+    fn get_num_cols(&self) -> i32;
 
-	/// Set a specific coefficient int the matrix
-	fn set_coefficent(&mut self, i: i32, j:i32, coef: f64) -> Result<(), Error>;
+    /// Set a specific coefficient int the matrix
+    fn set_coefficent(&mut self, i: i32, j: i32, coef: f64) -> Result<(), Error>;
+
+    /// Set the sense of the objective function, i.e., min or max
+    fn set_objective_sense(&mut self, sense: model::Objective) -> Result<(), Error>;
+
+    /// Retrieve the solution values for variables [begin; end]
+    fn get_x(&self, begin: i32, end: i32) -> Result<Vec<f64>, Error>;
 }
 
 impl Raw for Problem {
-	fn new_row(&mut self, rhs: f64, sense: char, name: Option<&str>) -> Result<(), Error> {
-		let rowname: [*const c_char; 1] = [ if name.is_some() {
-			str_as_ptr!(name.unwrap())
-		} else {
-			ptr::null()
-		} ];
-		cpx_call!(CPXnewrows, self.env, self.lp, 1, &rhs, &(sense as c_char), ptr::null(), rowname.as_ptr())
+    fn new_row(&mut self, rhs: f64, sense: model::Sense, name: Option<&str>) -> Result<(), Error> {
+        let rowname: [*const c_char; 1] = [if name.is_some() {
+                                               str_as_ptr!(name.unwrap())
+                                           } else {
+                                               ptr::null()
+                                           }];
+        cpx_call!(CPXnewrows,
+                  self.env,
+                  self.lp,
+                  1,
+                  &rhs,
+                  &(sense as c_char),
+                  ptr::null(),
+                  rowname.as_ptr())
 
-	}
+    }
 
-	fn new_col(&mut self, obj: f64, lb: f64, ub: f64, ctype: char, name: Option<&str>) -> Result<(), Error> {
-		let colname: [*const c_char; 1] = [ if name.is_some() {
-			str_as_ptr!(name.unwrap())
-		} else {
-			ptr::null()
-		} ];
-		cpx_call!(CPXnewcols, self.env, self.lp, 1, &obj, &ub, &lb, &(ctype as c_char), colname.as_ptr())
-	}
+    fn new_col(&mut self,
+               obj: f64,
+               lb: f64,
+               ub: f64,
+               ctype: model::VarType,
+               name: Option<&str>)
+               -> Result<(), Error> {
+        let colname: [*const c_char; 1] = [if name.is_some() {
+                                               str_as_ptr!(name.unwrap())
+                                           } else {
+                                               ptr::null()
+                                           }];
+        cpx_call!(CPXnewcols,
+                  self.env,
+                  self.lp,
+                  1,
+                  &obj,
+                  &lb,
+                  &ub,
+                  &(ctype as c_char),
+                  colname.as_ptr())
+    }
 
-	fn get_num_rows(&self) -> i32 {
-		unsafe { CPXgetnumrows(self.env, self.lp) }
-	}
+    fn get_num_rows(&self) -> i32 {
+        unsafe { CPXgetnumrows(self.env, self.lp) }
+    }
 
-	fn get_num_cols(&self) -> i32 {
-		unsafe { CPXgetnumcols(self.env, self.lp) }
-	}
+    fn get_num_cols(&self) -> i32 {
+        unsafe { CPXgetnumcols(self.env, self.lp) }
+    }
 
-	fn set_coefficent(&mut self, i: i32, j:i32, coef: f64) -> Result<(), Error>{
-		cpx_call!(CPXchgcoef, self.env, self.lp, i, j, coef)
-	}
+    fn set_coefficent(&mut self, i: i32, j: i32, coef: f64) -> Result<(), Error> {
+        cpx_call!(CPXchgcoef, self.env, self.lp, i, j, coef)
+    }
+
+    fn get_x(&self, begin: i32, end: i32) -> Result<Vec<f64>, Error> {
+        let sz = (end - begin + 1) as usize;
+        let mut v = Vec::with_capacity(sz);
+        v.resize(sz, 0.0);
+        cpx_return!(CPXgetx,
+                    {
+                        v
+                    },
+                    self.env,
+                    self.lp,
+                    v.as_mut_ptr(),
+                    begin,
+                    end)
+    }
+
+    fn set_objective_sense(&mut self, sense: model::Objective) -> Result<(), Error> {
+        cpx_call!(CPXchgobjsen, self.env, self.lp, sense as c_int)
+    }
 }

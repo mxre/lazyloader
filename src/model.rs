@@ -11,7 +11,7 @@ pub struct Model {
 }
 
 impl Model {
-	/// Create a new model
+    /// Create a new model
     pub fn new() -> Self {
         Model {}
     }
@@ -22,13 +22,12 @@ impl Model {
     }
 
     /// Add the objective function of the model
-    pub fn set_objective(m: Objective, o: Expr) {
-    }
+    pub fn set_objective(m: Objective, o: Expr) {}
 
     /// Create a new numeric (continous) variable
     pub fn new_numeric_var() -> Var {
         Var {
-            tp: 'C' as i8,
+            tp: VarType::Numeric as i8,
             lb: std::f64::MIN,
             ub: std::f64::MAX,
             name: String::new(),
@@ -38,7 +37,7 @@ impl Model {
     /// Create a new integer (non-continous) variable
     pub fn new_integer_var() -> Var {
         Var {
-            tp: 'I' as i8,
+            tp: VarType::Integer as i8,
             lb: std::f64::MIN,
             ub: std::f64::MAX,
             name: String::new(),
@@ -48,19 +47,18 @@ impl Model {
     /// Create a new binary variable
     pub fn new_binary_var() -> Var {
         Var {
-            tp: 'B' as i8,
+            tp: VarType::Binary as i8,
             lb: 0.0,
             ub: 1.0,
             name: String::new(),
         }
     }
-
 }
 
 /// Types of objectives
 #[derive(Clone)]
 pub enum Objective {
-	/// objective is a minimizer
+    /// objective is a minimizer
     Min = 1,
     /// objective is a maximizer
     Max = -1,
@@ -78,40 +76,47 @@ pub struct Constraint {
 /// Type of a constraint
 #[derive(Clone)]
 pub enum Sense {
-	LessThan = 'L' as isize,
-	Equal = 'E' as isize,
-	GreaterThan = 'G' as isize,
+    LessThan = 'L' as isize,
+    Equal = 'E' as isize,
+    GreaterThan = 'G' as isize,
+}
+
+#[derive(Clone)]
+pub enum VarType {
+    Numeric = 'C' as isize,
+    Integer = 'I' as isize,
+    Binary = 'B' as isize,
 }
 
 impl Constraint {
-	pub fn new() -> Self {
-		Constraint {
-			sense: Sense::Equal,
-			rhs: 0.0,
-			name: String::new(),
-			expr: None,
-		}
-	}
+    pub fn new() -> Self {
+        Constraint {
+            sense: Sense::Equal,
+            rhs: 0.0,
+            name: String::new(),
+            expr: None,
+        }
+    }
 
-	pub fn set_expr(&mut self, expr: Expr) -> &mut Self {
-		self.expr = Some(expr);
-		self
-	}
+    pub fn set_expr(&mut self, expr: Expr) -> &mut Self {
+        self.expr = Some(expr);
+        self
+    }
 
-	pub fn set_sense(&mut self, sense: Sense) -> &mut Self {
-		self.sense = sense;
-		self
-	}
+    pub fn set_sense(&mut self, sense: Sense) -> &mut Self {
+        self.sense = sense;
+        self
+    }
 
-	pub fn set_rhs (&mut self, rhs: f64) -> &mut Self {
-		self.rhs = rhs;
-		self
-	}
+    pub fn set_rhs(&mut self, rhs: f64) -> &mut Self {
+        self.rhs = rhs;
+        self
+    }
 
-	pub fn set_name(&mut self, name: &str) -> &mut Self {
-		self.name = name.to_string();
-		self
-	}
+    pub fn set_name(&mut self, name: &str) -> &mut Self {
+        self.name = name.to_string();
+        self
+    }
 }
 
 /// An expression is a sum of variables (each variable may have a coefficent)
@@ -172,9 +177,9 @@ impl Var {
 }
 
 impl Mul<i32> for Var {
-	type Output = Var;
+    type Output = Var;
 
-	fn mul(self, rhs: i32) -> Var {
-		self
-	}
+    fn mul(self, rhs: i32) -> Var {
+        self
+    }
 }

@@ -244,6 +244,8 @@ extern "C" {
                      bd: *const c_double)
                      -> c_int;
 
+    pub fn CPXchgobjsen(env: *const CPXenv, lp: *mut CPXlp, max_or_min: c_int) -> c_int;
+
     pub fn CPXcopylp(env: *const CPXenv,
                      lp: *mut CPXlp,
                      numcols: c_int,
