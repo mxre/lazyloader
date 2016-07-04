@@ -211,33 +211,33 @@ extern "C" {
     pub fn CPXgetnumcols(env: *const CPXenv, lp: *const CPXlp) -> c_int;
 
     pub fn CPXnewcols(env: *const CPXenv,
-                      lp: *mut CPXenv,
+                      lp: *mut CPXlp,
                       ccnt: c_int,
                       obj: *const c_double,
                       lb: *const c_double,
                       ub: *const c_double,
                       ctype: *const c_char,
-                      colname: &*mut c_char)
+                      colname: *const *const c_char)
                       -> c_int;
 
     pub fn CPXnewrows(env: *const CPXenv,
-                      lp: *mut CPXenv,
+                      lp: *mut CPXlp,
                       rcnt: c_int,
                       rhs: *const c_double,
                       sense: *const c_char,
                       rngval: *const c_double,
-                      rowname: &*mut c_char)
+                      rowname: *const *const c_char)
                       -> c_int;
 
     pub fn CPXchgcoef(env: *const CPXenv,
-                      lp: *mut CPXenv,
+                      lp: *mut CPXlp,
                       i: c_int,
                       j: c_int,
                       newvalue: c_double)
                       -> c_int;
 
     pub fn CPXchgbds(env: *const CPXenv,
-                     lp: *mut CPXenv,
+                     lp: *mut CPXlp,
                      cnt: c_int,
                      indices: *const c_int,
                      lu: *const c_char,
@@ -245,7 +245,7 @@ extern "C" {
                      -> c_int;
 
     pub fn CPXcopylp(env: *const CPXenv,
-                     lp: *mut CPXenv,
+                     lp: *mut CPXlp,
                      numcols: c_int,
                      numrows: c_int,
                      objsense: c_int,
@@ -261,9 +261,9 @@ extern "C" {
                      rngval: *const c_double)
                      -> c_int;
 
-    pub fn CPXcopyctype(env: *const CPXenv, lp: *mut CPXenv, ctype: *const c_char) -> c_int;
+    pub fn CPXcopyctype(env: *const CPXenv, lp: *mut CPXlp, ctype: *const c_char) -> c_int;
 
-    pub fn CPXpresolve(env: *const CPXenv, lp: *mut CPXenv, method: c_int) -> c_int;
+    pub fn CPXpresolve(env: *const CPXenv, lp: *mut CPXlp, method: c_int) -> c_int;
 
     pub fn CPXmipopt(env: *const CPXenv, lp: *mut CPXlp) -> c_int;
 

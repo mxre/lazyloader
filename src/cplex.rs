@@ -1,9 +1,10 @@
 //! CPLEX problem and solver
 use std::path::Path;
 use std::ffi::CString;
+use std::ptr;
 
 extern crate libc;
-use self::libc::c_int;
+use self::libc::{c_int, c_char};
 
 use cplex_sys::*;
 use error::{Error, PrivateErrorConstructor};
@@ -86,4 +87,55 @@ impl Drop for Problem {
             s => println!("{}", Error::new(self.env, s).description()),
         }
     }
+}
+
+/// Acessing CPLEX model directly
+pub trait Raw {
+	/// Add an empty new row, i.e. a new constraint to the model
+	fn new_row(&mut self, rhs: f64, sense: char, name: Option<&str>) -> Result<(), Error>;
+
+	/// Add an empty column, i.e. a new variable to the model
+	fn new_col(&mut self, obj: f64, lb: f64, ub: f64, ctype: char, name: Option<&str>) -> Result<(), Error>;
+
+	/// Get the current number of rows
+	fn get_num_rows(&self) -> i32;
+
+	/// Get the current number of columns
+	fn get_num_cols(&self) -> i32;
+
+	/// Set a specific coefficient int the matrix
+	fn set_coefficent(&mut self, i: i32, j:i32, coef: f64) -> Result<(), Error>;
+}
+
+impl Raw for Problem {
+	fn new_row(&mut self, rhs: f64, sense: char, name: Option<&str>) -> Result<(), Error> {
+		let rowname: [*const c_char; 1] = [ if name.is_some() {
+			str_as_ptr!(name.unwrap())
+		} else {
+			ptr::null()
+		} ];
+		cpx_call!(CPXnewrows, self.env, self.lp, 1, &rhs, &(sense as c_char), ptr::null(), rowname.as_ptr())
+
+	}
+
+	fn new_col(&mut self, obj: f64, lb: f64, ub: f64, ctype: char, name: Option<&str>) -> Result<(), Error> {
+		let colname: [*const c_char; 1] = [ if name.is_some() {
+			str_as_ptr!(name.unwrap())
+		} else {
+			ptr::null()
+		} ];
+		cpx_call!(CPXnewcols, self.env, self.lp, 1, &obj, &ub, &lb, &(ctype as c_char), colname.as_ptr())
+	}
+
+	fn get_num_rows(&self) -> i32 {
+		unsafe { CPXgetnumrows(self.env, self.lp) }
+	}
+
+	fn get_num_cols(&self) -> i32 {
+		unsafe { CPXgetnumcols(self.env, self.lp) }
+	}
+
+	fn set_coefficent(&mut self, i: i32, j:i32, coef: f64) -> Result<(), Error>{
+		cpx_call!(CPXchgcoef, self.env, self.lp, i, j, coef)
+	}
 }
