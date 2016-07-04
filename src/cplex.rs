@@ -75,10 +75,9 @@ impl Problem {
 
 impl Drop for Problem {
     fn drop(&mut self) {
-        let status = unsafe { CPXfreeprob(self.env, &mut &self.lp) };
-        match status {
+        match unsafe { CPXfreeprob(self.env, &mut &self.lp) } {
             0 => (),
-            _ => println!("{}", Error::new(self.env, status).description()),
+            s => println!("{}", Error::new(self.env, s).description()),
         }
     }
 }

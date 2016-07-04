@@ -27,7 +27,7 @@ fn test_version() {
 
 #[test]
 fn param_dbl() {
-    let e = Env::new().unwrap();
+    let mut e = Env::new().unwrap();
     e.set_param(cplex::param::mip::tolerances::GAP, 0.01).unwrap();
     let gap = e.get_param(cplex::param::mip::tolerances::GAP).unwrap();
     assert!(gap == 0.01);
@@ -35,7 +35,7 @@ fn param_dbl() {
 
 #[test]
 fn param_int() {
-    let e = Env::new().unwrap();
+    let mut e = Env::new().unwrap();
     e.set_param(cplex::param::mip::DISPLAY, 3).unwrap();
     let display = e.get_param(cplex::param::mip::DISPLAY).unwrap();
     assert!(display == 3);
@@ -43,8 +43,16 @@ fn param_int() {
 
 #[test]
 fn param_bool() {
-    let e = Env::new().unwrap();
+    let mut e = Env::new().unwrap();
     e.set_param(cplex::param::emphasis::NUMERICAL, true).unwrap();
     let emph = e.get_param(cplex::param::emphasis::NUMERICAL).unwrap();
     assert!(emph);
+}
+
+#[test]
+fn param_str() {
+    let mut e = Env::new().unwrap();
+    e.set_param(cplex::param::WORK_DIR, "/tmp").unwrap();
+    let wd = e.get_param(cplex::param::WORK_DIR).unwrap();
+    assert!(wd == "/tmp");
 }

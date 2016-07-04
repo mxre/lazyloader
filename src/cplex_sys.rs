@@ -189,7 +189,7 @@ extern "C" {
 
     pub fn CPXsetdblparam(env: *mut CPXenv, whichparam: c_int, newvalue: c_double) -> c_int;
 
-    pub fn CPXsetstrparam(env: *mut CPXenv, whichparam: c_int, newvalue: *mut c_char) -> c_int;
+    pub fn CPXsetstrparam(env: *mut CPXenv, whichparam: c_int, newvalue: *const c_char) -> c_int;
 
     pub fn CPXgetintparam(env: *const CPXenv, whichparam: c_int, value: *mut c_int) -> c_int;
 

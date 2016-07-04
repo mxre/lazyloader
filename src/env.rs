@@ -38,13 +38,13 @@ impl Env {
         cpx_call!(CPXsetdefaults, self.env)
     }
 
-    pub fn set_param<T>(&mut self, what: T, value: T::ValueType) -> Result<(), Error>
+    pub fn set_param<T>(&mut self, what: T, value: T::InType) -> Result<(), Error>
         where T: ParameterType
     {
         what.set(self.env, value)
     }
 
-    pub fn get_param<T>(&self, what: T) -> Result<T::ValueType, Error>
+    pub fn get_param<T>(&self, what: T) -> Result<T::ReturnType, Error>
         where T: ParameterType
     {
         what.get(self.env)
@@ -69,10 +69,9 @@ impl Env {
 
 impl Drop for Env {
     fn drop(&mut self) {
-        let status = unsafe { CPXcloseCPLEX(&mut &self.env) };
-        match status {
+        match unsafe { CPXcloseCPLEX(&mut &self.env) } {
             0 => (),
-            _ => println!("{}", Error::new(ptr::null(), status).description()),
+            s => println!("{}", Error::new(ptr::null(), s).description()),
         }
     }
 }

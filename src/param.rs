@@ -158,19 +158,24 @@ pub mod tune {
 
 /// Common trait for all parameters
 pub trait ParameterType {
-    /// Type of the paramters value
-    type ValueType;
+    /// Type of the paramters value, for the setter.
+    /// For strings This can be `&str`
+    type InType;
+    /// Type of the paramters value, for the getter
+    /// For strings this can be `String`
+    type ReturnType;
 
     /// Setter for the parameter
-    fn set(self, env: *mut CPXenv, value: Self::ValueType) -> Result<(), Error>;
+    fn set(self, env: *mut CPXenv, value: Self::InType) -> Result<(), Error>;
 
     /// Getter for the parameter
-    fn get(self, env: *const CPXenv) -> Result<Self::ValueType, Error>;
+    fn get(self, env: *const CPXenv) -> Result<Self::ReturnType, Error>;
 }
 
 // IntParameter //////////////////////////////////////////////////////////////////////////////////
 impl ParameterType for IntParameter {
-    type ValueType = i32;
+    type InType = i32;
+    type ReturnType = i32;
 
     fn set(self, env: *mut CPXenv, value: i32) -> Result<(), Error> {
         cpx_call!(CPXsetintparam, env, IntParameter::into(self), value)
@@ -178,11 +183,7 @@ impl ParameterType for IntParameter {
 
     fn get(self, env: *const CPXenv) -> Result<i32, Error> {
         let mut value: i32 = 0;
-        cpx_return!(CPXgetintparam,
-                    value,
-                    env,
-                    IntParameter::into(self),
-                    &mut value)
+        cpx_return!(CPXgetintparam, value, env, IntParameter::into(self), &mut value)
     }
 }
 
@@ -200,7 +201,8 @@ impl From<IntParameter> for i32 {
 
 /// LongParameter ////////////////////////////////////////////////////////////////////////////////
 impl ParameterType for LongParameter {
-    type ValueType = i64;
+    type InType = i64;
+    type ReturnType = i64;
 
     fn set(self, env: *mut CPXenv, value: i64) -> Result<(), Error> {
         cpx_call!(CPXsetlongparam, env, LongParameter::into(self), value)
@@ -208,11 +210,7 @@ impl ParameterType for LongParameter {
 
     fn get(self, env: *const CPXenv) -> Result<i64, Error> {
         let mut value: i64 = 0;
-        cpx_return!(CPXgetlongparam,
-                    value,
-                    env,
-                    LongParameter::into(self),
-                    &mut value)
+        cpx_return!(CPXgetlongparam, value, env, LongParameter::into(self), &mut value)
     }
 }
 
@@ -230,7 +228,8 @@ impl From<LongParameter> for i32 {
 
 // DblParameter //////////////////////////////////////////////////////////////////////////////////
 impl ParameterType for DblParameter {
-    type ValueType = f64;
+    type InType = f64;
+    type ReturnType = f64;
 
     fn set(self, env: *mut CPXenv, value: f64) -> Result<(), Error> {
         cpx_call!(CPXsetdblparam, env, DblParameter::into(self), value)
@@ -238,11 +237,7 @@ impl ParameterType for DblParameter {
 
     fn get(self, env: *const CPXenv) -> Result<f64, Error> {
         let mut value: f64 = 0.0;
-        cpx_return!(CPXgetdblparam,
-                    value,
-                    env,
-                    DblParameter::into(self),
-                    &mut value)
+        cpx_return!(CPXgetdblparam, value, env, DblParameter::into(self), &mut value)
     }
 }
 
@@ -260,7 +255,8 @@ impl From<DblParameter> for i32 {
 
 // BoolParameter /////////////////////////////////////////////////////////////////////////////////
 impl ParameterType for BoolParameter {
-    type ValueType = bool;
+    type InType = bool;
+    type ReturnType = bool;
 
     fn set(self, env: *mut CPXenv, value: bool) -> Result<(), Error> {
         cpx_call!(CPXsetintparam, env, BoolParameter::into(self), value as i32)
@@ -268,11 +264,7 @@ impl ParameterType for BoolParameter {
 
     fn get(self, env: *const CPXenv) -> Result<bool, Error> {
         let mut value: i32 = 0;
-        cpx_return!(CPXgetintparam,
-                    value == 1,
-                    env,
-                    BoolParameter::into(self),
-                    &mut value)
+        cpx_return!(CPXgetintparam, value == 1, env, BoolParameter::into(self), &mut value)
     }
 }
 
@@ -289,6 +281,27 @@ impl From<BoolParameter> for i32 {
 }
 
 // StrParameter //////////////////////////////////////////////////////////////////////////////////
+use std::string::String;
+use std::ffi::CString;
+impl ParameterType for StrParameter {
+	type InType = &'static str;
+    type ReturnType = String;
+
+    fn set<'a>(self, env: *mut CPXenv, value: &'a str) -> Result<(), Error> {
+        cpx_call!(CPXsetstrparam, env, StrParameter::into(self), str_as_ptr!(value))
+    }
+
+    fn get(self, env: *const CPXenv) -> Result<String, Error> {
+        let message = unsafe { CString::from_vec_unchecked(Vec::with_capacity(CPXMESSAGEBUFSIZE)) };
+		let c_msg = message.into_raw();
+        cpx_return!(CPXgetstrparam,
+                    unsafe { CString::from_raw(c_msg).to_str().unwrap().to_string() },
+                    env,
+                    StrParameter::into(self),
+                    c_msg)
+    }
+}
+
 impl From<i32> for StrParameter {
     fn from(param: i32) -> StrParameter {
         StrParameter(param)
