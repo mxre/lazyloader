@@ -49,8 +49,7 @@ fn main() {
     let libname = String::from(library.file_stem().unwrap().to_str().unwrap());
     let libname = libname.trim_left_matches("lib");
 
-    println!("cargo:rustc-link-search=native={}",
-             cpxpath.to_str().unwrap());
+    println!("cargo:rustc-link-search=native={}", cpxpath.display());
     println!("cargo:rustc-link-lib={}", libname);
 
     let target = PathBuf::from(env::var("OUT_DIR").unwrap());

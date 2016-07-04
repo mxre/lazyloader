@@ -11,6 +11,7 @@ mod error;
 pub mod param;
 mod env;
 mod cplex;
+pub mod model;
 
 pub use error::Error;
 pub use cplex::Problem;

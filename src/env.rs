@@ -19,7 +19,7 @@ impl Env {
     /// Create a new CPLEX environment
     /// # Native call
     /// `CPXopenCPLEX`
-    pub fn new() -> Result<Env, Error> {
+    pub fn new() -> Result<Self, Error> {
         let mut status = 0 as c_int;
         let env = unsafe { CPXopenCPLEX(&mut status) };
         match status {
@@ -38,15 +38,13 @@ impl Env {
         cpx_call!(CPXsetdefaults, self.env)
     }
 
-    pub fn set_param<T>(&mut self, what: T, value: T::InType) -> Result<(), Error>
-        where T: ParameterType
-    {
+    /// Set a CPLEX parameter
+    pub fn set_param<T: ParameterType>(&mut self, what: T, value: T::InType) -> Result<(), Error> {
         what.set(self.env, value)
     }
 
-    pub fn get_param<T>(&self, what: T) -> Result<T::ReturnType, Error>
-        where T: ParameterType
-    {
+    /// Get a CPLEX parameter
+    pub fn get_param<T: ParameterType>(&self, what: T) -> Result<T::ReturnType, Error> {
         what.get(self.env)
     }
 

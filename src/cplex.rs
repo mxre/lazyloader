@@ -8,6 +8,7 @@ use self::libc::c_int;
 use cplex_sys::*;
 use error::{Error, PrivateErrorConstructor};
 use env;
+use model;
 
 /// LP problem and solver
 pub struct Problem {
@@ -19,7 +20,7 @@ impl Problem {
     /// Create a CPLEX LP problem in the environment
     /// # Native call
     /// `CPXcreateprob`
-    pub fn new(e: &env::Env, name: &str) -> Result<Problem, Error> {
+    pub fn new(e: &env::Env, name: &str) -> Result<Self, Error> {
         let mut status = 0 as c_int;
         let lp = unsafe { CPXcreateprob(e.env, &mut status, str_as_ptr!(name)) };
         match status {
@@ -70,6 +71,11 @@ impl Problem {
                   self.lp,
                   str_as_ptr!(file.as_ref().to_string_lossy().to_mut().as_str()),
                   str_as_ptr!(filetype))
+    }
+
+    #[allow(unused_variables)]
+    pub fn extract(m: model::Model) -> Result<(), Error> {
+        unimplemented!()
     }
 }
 

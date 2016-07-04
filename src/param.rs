@@ -178,17 +178,17 @@ impl ParameterType for IntParameter {
     type ReturnType = i32;
 
     fn set(self, env: *mut CPXenv, value: i32) -> Result<(), Error> {
-        cpx_call!(CPXsetintparam, env, IntParameter::into(self), value)
+        cpx_call!(CPXsetintparam, env, Self::into(self), value)
     }
 
     fn get(self, env: *const CPXenv) -> Result<i32, Error> {
         let mut value: i32 = 0;
-        cpx_return!(CPXgetintparam, value, env, IntParameter::into(self), &mut value)
+        cpx_return!(CPXgetintparam, value, env, Self::into(self), &mut value)
     }
 }
 
 impl From<i32> for IntParameter {
-    fn from(param: i32) -> IntParameter {
+    fn from(param: i32) -> Self {
         IntParameter(param)
     }
 }
@@ -205,17 +205,17 @@ impl ParameterType for LongParameter {
     type ReturnType = i64;
 
     fn set(self, env: *mut CPXenv, value: i64) -> Result<(), Error> {
-        cpx_call!(CPXsetlongparam, env, LongParameter::into(self), value)
+        cpx_call!(CPXsetlongparam, env, Self::into(self), value)
     }
 
     fn get(self, env: *const CPXenv) -> Result<i64, Error> {
         let mut value: i64 = 0;
-        cpx_return!(CPXgetlongparam, value, env, LongParameter::into(self), &mut value)
+        cpx_return!(CPXgetlongparam, value, env, Self::into(self), &mut value)
     }
 }
 
 impl From<i32> for LongParameter {
-    fn from(param: i32) -> LongParameter {
+    fn from(param: i32) -> Self {
         LongParameter(param)
     }
 }
@@ -232,17 +232,17 @@ impl ParameterType for DblParameter {
     type ReturnType = f64;
 
     fn set(self, env: *mut CPXenv, value: f64) -> Result<(), Error> {
-        cpx_call!(CPXsetdblparam, env, DblParameter::into(self), value)
+        cpx_call!(CPXsetdblparam, env, Self::into(self), value)
     }
 
     fn get(self, env: *const CPXenv) -> Result<f64, Error> {
         let mut value: f64 = 0.0;
-        cpx_return!(CPXgetdblparam, value, env, DblParameter::into(self), &mut value)
+        cpx_return!(CPXgetdblparam, value, env, Self::into(self), &mut value)
     }
 }
 
 impl From<i32> for DblParameter {
-    fn from(param: i32) -> DblParameter {
+    fn from(param: i32) -> Self {
         DblParameter(param)
     }
 }
@@ -259,17 +259,21 @@ impl ParameterType for BoolParameter {
     type ReturnType = bool;
 
     fn set(self, env: *mut CPXenv, value: bool) -> Result<(), Error> {
-        cpx_call!(CPXsetintparam, env, BoolParameter::into(self), value as i32)
+        cpx_call!(CPXsetintparam, env, Self::into(self), value as i32)
     }
 
     fn get(self, env: *const CPXenv) -> Result<bool, Error> {
         let mut value: i32 = 0;
-        cpx_return!(CPXgetintparam, value == 1, env, BoolParameter::into(self), &mut value)
+        cpx_return!(CPXgetintparam,
+                    value == 1,
+                    env,
+                    Self::into(self),
+                    &mut value)
     }
 }
 
 impl From<i32> for BoolParameter {
-    fn from(param: i32) -> BoolParameter {
+    fn from(param: i32) -> Self {
         BoolParameter(param)
     }
 }
@@ -284,26 +288,26 @@ impl From<BoolParameter> for i32 {
 use std::string::String;
 use std::ffi::CString;
 impl ParameterType for StrParameter {
-	type InType = &'static str;
+    type InType = &'static str;
     type ReturnType = String;
 
     fn set<'a>(self, env: *mut CPXenv, value: &'a str) -> Result<(), Error> {
-        cpx_call!(CPXsetstrparam, env, StrParameter::into(self), str_as_ptr!(value))
+        cpx_call!(CPXsetstrparam, env, Self::into(self), str_as_ptr!(value))
     }
 
     fn get(self, env: *const CPXenv) -> Result<String, Error> {
         let message = unsafe { CString::from_vec_unchecked(Vec::with_capacity(CPXMESSAGEBUFSIZE)) };
-		let c_msg = message.into_raw();
+        let c_msg = message.into_raw();
         cpx_return!(CPXgetstrparam,
                     unsafe { CString::from_raw(c_msg).to_str().unwrap().to_string() },
                     env,
-                    StrParameter::into(self),
+                    Self::into(self),
                     c_msg)
     }
 }
 
 impl From<i32> for StrParameter {
-    fn from(param: i32) -> StrParameter {
+    fn from(param: i32) -> Self {
         StrParameter(param)
     }
 }
