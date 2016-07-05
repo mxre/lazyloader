@@ -31,6 +31,9 @@ static CPLEX_LIBPATH: &'static str = "cplex\\lib\\x64_windows_vs2013\\stat_mda";
 #[cfg(target_os = "windows")]
 static CPLEX_LIBRARY_NAME: &'static str = "cplex12[0-9][0-9].dll";
 
+#[cfg(not(all(target_os = "windows", target_env = "msvc")))]
+static CPLEX_LIBPATH: &'static str = "";
+
 fn get_cplex_library_name(cpxpath: &PathBuf) -> PathBuf {
     for entry in glob(cpxpath.join(CPLEX_LIBRARY_NAME).to_str().unwrap()).unwrap() {
         return entry.unwrap().clone();
