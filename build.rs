@@ -26,6 +26,8 @@ static CPLEX_ENVIRONMENT_VAR: &'static str = "CPLEX_STUDIO_DIR126";
 static CPLEX_DEFAULT: &'static str = "C:\\Program Files\\IBM\\ILOG\\CPLEX_Studio126";
 #[cfg(target_os = "windows")]
 static CPLEX_SUBPATH: &'static str = "cplex\\bin\\x64_win64";
+#[cfg(all(target_os = "windows", target_env = "msvc"))]
+static CPLEX_LIBPATH: &'static str = "cplex\\lib\\x64_windows_vs2013\\stat_mda";
 #[cfg(target_os = "windows")]
 static CPLEX_LIBRARY_NAME: &'static str = "cplex12[0-9][0-9].dll";
 
@@ -53,8 +55,20 @@ fn main() {
     let libname = String::from(library.file_stem().unwrap().to_str().unwrap());
     let libname = libname.trim_left_matches("lib");
 
-    println!("cargo:rustc-link-search=native={}", cpxpath.display());
-    println!("cargo:rustc-link-lib={}", libname);
+    if cfg!(target_env = "msvc") {
+        let cpxpath = PathBuf::from(env::var(CPLEX_ENVIRONMENT_VAR)
+            .unwrap_or(String::from(CPLEX_DEFAULT)));
+        let cpxpath = cpxpath.join(CPLEX_LIBPATH);
+        println!("cargo:rustc-link-search=native={}", cpxpath.display());
+    } else {
+        println!("cargo:rustc-link-search=native={}", cpxpath.display());
+    }
+    
+    if cfg!(feature="cpx_static") {
+        println!("cargo:rustc-link-lib=static={}", libname);
+    } else {
+        println!("cargo:rustc-link-lib=dylib={}", libname);
+    }
 
     if !cfg!(feature = "cpx_static") {
         let target = PathBuf::from(env::var("OUT_DIR").unwrap());
