@@ -166,6 +166,15 @@ pub const CPX_PARAM_RAMPUPTILIM: c_int = 2165;
 pub const CPX_PARAM_CALCQCPDUALS: c_int = 4003;
 pub const CPX_PARAM_QPMAKEPSDIND: c_int = 4010;
 
+pub const CPXPROB_LP: c_int = 0;
+pub const CPXPROB_MILP: c_int = 1;
+pub const CPXPROB_FIXEDMILP: c_int = 3;
+pub const CPXPROB_QP: c_int = 5;
+pub const CPXPROB_MIQP: c_int = 7;
+pub const CPXPROB_FIXEDMIQP: c_int = 8;
+pub const CPXPROB_QCP: c_int = 10;
+pub const CPXPROB_MIQCP: c_int = 11;
+
 /// CPLEX header version inficates the version of the header definitions
 pub const CPX_VERSION: c_int = 12060200;
 pub const CPX_VERSION_VERSION: c_int = 12;
@@ -287,6 +296,8 @@ extern "C" {
     pub fn CPXLcopyctype(env: *const CPXenv, lp: *mut CPXlp, ctype: *const c_char) -> c_int;
 
     pub fn CPXLpresolve(env: *const CPXenv, lp: *mut CPXlp, method: c_int) -> c_int;
+
+    pub fn CPXLgetprobtype(env: *const CPXenv, lp: *mut CPXlp) -> c_int;
 
     pub fn CPXLmipopt(env: *const CPXenv, lp: *mut CPXlp) -> c_int;
 

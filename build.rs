@@ -11,10 +11,14 @@ use std::io::Write;
 static CPLEX_ENVIRONMENT_VAR: &'static str = "CPLEX_DIR";
 #[cfg(target_os = "linux")]
 static CPLEX_DEFAULT: &'static str = "/opt/ibm/ILOG/CPLEX_Studio126";
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", not(feature="cpx_static")))]
 static CPLEX_SUBPATH: &'static str = "cplex/bin/x86-64_linux";
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", not(feature="cpx_static")))]
 static CPLEX_LIBRARY_NAME: &'static str = "libcplex12[0-9][0-9].so";
+#[cfg(all(target_os = "linux", feature="cpx_static"))]
+static CPLEX_SUBPATH: &'static str = "cplex/lib/x86-64_linux/static_pic";
+#[cfg(all(target_os = "linux", feature="cpx_static"))]
+static CPLEX_LIBRARY_NAME: &'static str = "libcplex.a";
 
 #[cfg(target_os = "windows")]
 static CPLEX_ENVIRONMENT_VAR: &'static str = "CPLEX_STUDIO_DIR126";
@@ -52,10 +56,12 @@ fn main() {
     println!("cargo:rustc-link-search=native={}", cpxpath.display());
     println!("cargo:rustc-link-lib={}", libname);
 
-    let target = PathBuf::from(env::var("OUT_DIR").unwrap());
-    let target = target.parent().unwrap().parent().unwrap().parent().unwrap();
-    let target = target.join(library.file_name().unwrap());
-    if !target.exists() {
-        copy(library, target).expect("Could not copy library");
+    if !cfg!(feature = "cpx_static") {
+        let target = PathBuf::from(env::var("OUT_DIR").unwrap());
+        let target = target.parent().unwrap().parent().unwrap().parent().unwrap();
+        let target = target.join(library.file_name().unwrap());
+        if !target.exists() {
+            copy(library, target).expect("Could not copy library");
+        }
     }
 }

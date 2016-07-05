@@ -40,7 +40,12 @@ impl Problem {
     /// # Native call
     /// `CPXLmipopt`
     pub fn solve(&mut self) -> Result<(), Error> {
-        cpx_call!(CPXLmipopt, self.env, &mut *self.lp)
+        match unsafe { CPXLgetprobtype(self.env, self.lp) } {
+            CPXPROB_LP => cpx_call!(CPXLlpopt, self.env, self.lp),
+            CPXPROB_MILP |
+            CPXPROB_FIXEDMILP => cpx_call!(CPXLmipopt, self.env, self.lp),
+            _ => unimplemented!(),
+        }
     }
 
     /// Get the numeric CPLEX status
