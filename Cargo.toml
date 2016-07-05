@@ -10,14 +10,18 @@ libc = "0.2.13"
 [build-dependencies]
 glob = "0.2.11"
 
+[profile.release]
+opt-level = 3
+lto = true
+
 [profile.test]
 opt-level = 0
 debug = true
 rpath = false
 lto = false
 debug-assertions = true
-panic = 'unwind'
 
 [features]
 cpx_call_log = []
 cpx_static = []
+

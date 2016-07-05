@@ -66,8 +66,8 @@ fn main() {
     } else {
         println!("cargo:rustc-link-search=native={}", cpxpath.display());
     }
-    
-    if cfg!(feature="cpx_static") {
+
+    if cfg!(feature = "cpx_static") {
         println!("cargo:rustc-link-lib=static={}", libname);
     } else {
         println!("cargo:rustc-link-lib=dylib={}", libname);
