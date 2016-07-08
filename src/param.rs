@@ -3,14 +3,23 @@ use cplex_sys::*;
 use error::{Error, PrivateErrorConstructor};
 
 /// Type for integer parameter
+#[derive(Clone, PartialEq, Eq)]
 pub struct IntParameter(i32);
+
 /// Type for long integer parameter
+#[derive(Clone, PartialEq, Eq)]
 pub struct LongParameter(i32);
+
 /// Type for boolean parameter
+#[derive(Clone, PartialEq, Eq)]
 pub struct BoolParameter(i32);
+
 /// Type for numeric parameter
+#[derive(Clone, PartialEq, Eq)]
 pub struct DblParameter(i32);
+
 /// Type for string parameter
+#[derive(Clone, PartialEq, Eq)]
 pub struct StrParameter(i32);
 
 /// CPX_PARAM_ADVIND

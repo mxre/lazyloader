@@ -272,6 +272,8 @@ extern "C" {
                       bd: *const c_double)
                       -> c_int;
 
+    pub fn CPXLchgobjoffset(env: *const CPXenv, lp: *mut CPXlp, offset: f64) -> c_int;
+
     pub fn CPXLchgobjsen(env: *const CPXenv, lp: *mut CPXlp, max_or_min: c_int) -> c_int;
 
     pub fn CPXLcopylpwnames(env: *const CPXenv,

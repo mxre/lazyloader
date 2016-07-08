@@ -17,6 +17,11 @@ pub struct Problem {
     pub lp: *mut CPXlp,
 }
 
+pub trait Extractable {
+    /// Add a constraint to the model and extract the variables
+    fn extract(self, &Problem) -> Result<(), Error>;
+}
+
 impl Problem {
     /// Create a CPLEX LP problem in the environment
     /// # Native call
@@ -80,8 +85,8 @@ impl Problem {
     }
 
     #[allow(unused_variables)]
-    pub fn extract(m: model::Model) -> Result<(), Error> {
-        unimplemented!()
+    pub fn extract(&self, m: model::Model) -> Result<(), Error> {
+        m.extract(self)
     }
 }
 
@@ -179,17 +184,8 @@ impl Raw for Problem {
 
     fn get_x(&self, begin: i32, end: i32) -> Result<Vec<f64>, Error> {
         let sz = (end - begin + 1) as usize;
-        let mut v = Vec::with_capacity(sz);
-        v.resize(sz, 0.0);
-        cpx_return!(CPXLgetx,
-                    {
-                        v
-                    },
-                    self.env,
-                    self.lp,
-                    v.as_mut_ptr(),
-                    begin,
-                    end)
+        let mut v = vec!(0.0; sz);
+        cpx_return!(CPXLgetx, v, self.env, self.lp, v.as_mut_ptr(), begin, end)
     }
 
     fn set_objective_sense(&mut self, sense: model::Objective) -> Result<(), Error> {
