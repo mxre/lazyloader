@@ -13,6 +13,7 @@ pub struct Error {
 
 pub trait PrivateErrorConstructor {
     fn new(env: *const cplex_sys::CPXenv, code: i32) -> Error;
+    fn custom_error(text: &str) -> Error;
 }
 
 impl Error {
@@ -39,6 +40,13 @@ impl PrivateErrorConstructor for Error {
                 code: code,
                 description: CString::from_raw(c_msg).to_str().unwrap().trim().to_string(),
             }
+        }
+    }
+
+    fn custom_error(text: &str) -> Error {
+        Error {
+            code: 0,
+            description: text.to_string(),
         }
     }
 }

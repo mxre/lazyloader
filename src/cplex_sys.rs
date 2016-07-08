@@ -240,7 +240,7 @@ extern "C" {
 
     pub fn CPXLnewcols(env: *const CPXenv,
                        lp: *mut CPXlp,
-                       ccnt: CPXCNT,
+                       ccnt: CPXDIM,
                        obj: *const c_double,
                        lb: *const c_double,
                        ub: *const c_double,
@@ -298,6 +298,17 @@ extern "C" {
     pub fn CPXLcopyctype(env: *const CPXenv, lp: *mut CPXlp, ctype: *const c_char) -> c_int;
 
     pub fn CPXLpresolve(env: *const CPXenv, lp: *mut CPXlp, method: c_int) -> c_int;
+
+    pub fn CPXLcutcallbackadd(env: *const CPXenv,
+                              cbdata: *mut c_void,
+                              wherefrom: c_int,
+                              nzcnt: CPXDIM,
+                              rhs: c_double,
+                              sense: c_int,
+                              cutind: *const CPXDIM,
+                              cutval: *const c_double,
+                              purgeable: c_int)
+                              -> c_int;
 
     pub fn CPXLgetprobtype(env: *const CPXenv, lp: *mut CPXlp) -> c_int;
 

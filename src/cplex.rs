@@ -17,9 +17,9 @@ pub struct Problem {
     pub lp: *mut CPXlp,
 }
 
-pub trait Extractable {
+pub trait ExtractableModel {
     /// Add a constraint to the model and extract the variables
-    fn extract(self, &Problem) -> Result<(), Error>;
+    fn extract(self, &mut Problem) -> Result<(), Error>;
 }
 
 impl Problem {
@@ -84,8 +84,8 @@ impl Problem {
                   str_as_ptr!(filetype))
     }
 
-    #[allow(unused_variables)]
-    pub fn extract(&self, m: model::Model) -> Result<(), Error> {
+
+    pub fn extract(&mut self, m: model::Model) -> Result<(), Error> {
         m.extract(self)
     }
 }
