@@ -7,56 +7,90 @@ use std::ops::{Add, Mul};
 /// ILP model, containing objective function and set of constraints
 #[derive(Clone)]
 pub struct Model {
-
+    c_cnt: usize,
+    v_cnt: usize,
+    vars: Vec<Var>,
+    constraints: Vec<Constraint>,
 }
 
 impl Model {
     /// Create a new model
     pub fn new() -> Self {
-        Model {}
+        Model { c_cnt: 0, v_cnt: 0, vars: Vec::new(), constraints: Vec::new(), }
     }
 
     /// Add a constraint to the model and extract the variables
-    pub fn add(&mut self, c: Constraint) -> &mut Self {
+    pub fn extract(&mut self, c: Constraint) -> &mut Self {
         self
     }
 
     /// Add the objective function of the model
-    pub fn set_objective(m: Objective, o: Expr) {}
+    pub fn set_objective(&mut self, m: Objective, o: Expr) -> &mut Self {
+		self
+    }
 
     /// Create a new numeric (continous) variable
-    pub fn new_numeric_var() -> Var {
-        Var {
+    pub fn new_numeric_var(&mut self) -> &mut Var {
+        let cnt = self.v_cnt;
+        self.v_cnt += 1;
+        self.vars.push(Var {
+            cnt: cnt,
             tp: VarType::Numeric as i8,
             lb: std::f64::MIN,
             ub: std::f64::MAX,
             name: String::new(),
-        }
+        });
+        assert!(self.vars.len() == cnt + 1);
+        &mut self.vars[cnt]
     }
 
     /// Create a new integer (non-continous) variable
-    pub fn new_integer_var() -> Var {
-        Var {
+    pub fn new_integer_var(&mut self) -> &mut Var {
+        let cnt = self.v_cnt;
+        self.v_cnt += 1;
+        self.vars.push(Var {
+            cnt: cnt,
             tp: VarType::Integer as i8,
             lb: std::f64::MIN,
             ub: std::f64::MAX,
             name: String::new(),
-        }
+        });
+        assert!(self.vars.len() == cnt + 1);
+        &mut self.vars[cnt]
     }
 
     /// Create a new binary variable
-    pub fn new_binary_var() -> Var {
-        Var {
+    pub fn new_binary_var(&mut self) -> &mut Var {
+        let cnt = self.v_cnt;
+        self.v_cnt += 1;
+        self.vars.push(Var {
+            cnt: cnt,
             tp: VarType::Binary as i8,
             lb: 0.0,
             ub: 1.0,
             name: String::new(),
-        }
+        });
+        assert!(self.vars.len() == cnt + 1);
+        &mut self.vars[cnt]
+    }
+
+	pub fn new_constraint(&mut self) -> &mut Constraint {
+        let cnt = self.c_cnt;
+        self.c_cnt += 1;
+        self.constraints.push(Constraint {
+            cnt: cnt,
+            sense: Sense::Equal,
+            rhs: 0.0,
+            name: String::new(),
+            expr: None,
+        });
+        assert!(self.constraints.len() == cnt + 1);
+        &mut self.constraints[cnt]
     }
 }
 
 /// Types of objectives
-#[derive(Clone)]
+#[derive(Clone, Hash)]
 pub enum Objective {
     /// objective is a minimizer
     Min = 1,
@@ -67,6 +101,7 @@ pub enum Objective {
 /// A constraint is an inequality of an expression and a constant
 #[derive(Clone)]
 pub struct Constraint {
+	cnt : usize,
     sense: Sense,
     rhs: f64,
     expr: Option<Expr>,
@@ -74,14 +109,14 @@ pub struct Constraint {
 }
 
 /// Type of a constraint
-#[derive(Clone)]
+#[derive(Clone, Hash)]
 pub enum Sense {
     LessThan = 'L' as isize,
     Equal = 'E' as isize,
     GreaterThan = 'G' as isize,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Hash)]
 pub enum VarType {
     Numeric = 'C' as isize,
     Integer = 'I' as isize,
@@ -89,15 +124,6 @@ pub enum VarType {
 }
 
 impl Constraint {
-    pub fn new() -> Self {
-        Constraint {
-            sense: Sense::Equal,
-            rhs: 0.0,
-            name: String::new(),
-            expr: None,
-        }
-    }
-
     pub fn set_expr(&mut self, expr: Expr) -> &mut Self {
         self.expr = Some(expr);
         self
@@ -135,6 +161,7 @@ impl Add<Var> for Expr {
 /// A variable of the model
 #[derive(Clone)]
 pub struct Var {
+	cnt : usize,
     tp: i8,
     lb: f64,
     ub: f64,
