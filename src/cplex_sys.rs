@@ -9,6 +9,8 @@ pub enum CPXenv {}
 
 pub enum CPXlp {}
 
+pub enum CPXFile {}
+
 pub const CPXMESSAGEBUFSIZE: usize = 1024;
 
 pub const CPX_PARAM_ADVIND: c_int = 1001;
@@ -521,4 +523,8 @@ extern "C" {
                          filename: *const c_char,
                          filetype: *const c_char)
                          -> c_int;
+
+    pub fn CPXLsetlogfile(env: *const CPXenv, file: *mut CPXFile) -> c_int;
+
+    pub fn CPXLfopen(filename: *const c_char, type_str: *const c_char) -> *mut CPXFile;
 }

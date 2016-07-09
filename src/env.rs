@@ -4,7 +4,7 @@ use std::ptr;
 use std::ffi::{CStr, CString};
 
 extern crate libc;
-use self::libc::c_int;
+use self::libc::{c_int, c_char};
 
 use cplex_sys::*;
 use error::{Error, PrivateErrorConstructor};
@@ -25,6 +25,11 @@ impl Env {
         match status {
             0 => {
                 assert!(!env.is_null());
+                unsafe {
+                    CPXLsetstrparam(env,
+                                    CPX_PARAM_APIENCODING,
+                                    "UTF-8".as_ptr() as *const c_char)
+                };
                 Ok(Env { env: env })
             }
             _ => Err(Error::new(ptr::null(), status)),
@@ -62,6 +67,20 @@ impl Env {
     /// `CPXLversion`
     pub fn version(&self) -> &str {
         ptr_as_str!(CPXLversion(self.env))
+    }
+
+    /// Set a logfile for all CPLEX output
+    /// # Native call
+    /// `CPXLfopen` and `CPXLsetlogfile`
+    pub fn set_logfile<P: AsRef<Path>>(&self, file: P) -> Result<(), Error> {
+        let fp = unsafe {
+            CPXLfopen(str_as_ptr!(file.as_ref().to_string_lossy().to_mut().as_str()),
+                      "w".as_ptr() as *const c_char)
+        };
+        if fp == ptr::null_mut() {
+            return Err(Error::custom_error("Could not open/create logfile"));
+        }
+        cpx_call!(CPXLsetlogfile, self.env, fp)
     }
 }
 

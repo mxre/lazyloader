@@ -34,6 +34,8 @@ pub const TIME_LIMIT: DblParameter = DblParameter(CPX_PARAM_TILIM);
 pub const WORK_DIR: StrParameter = StrParameter(CPX_PARAM_WORKDIR);
 /// CPX_PARAM_WORKMEM
 pub const WORK_MEM: DblParameter = DblParameter(CPX_PARAM_WORKMEM);
+/// CPX_PARAM_SCRIND
+pub const SCREEN_OUTPUT: BoolParameter = BoolParameter(CPX_PARAM_SCRIND);
 
 
 /// Paramter driving alogrithm emphasis
@@ -163,6 +165,20 @@ pub mod tune {
     pub const REPEAT: IntParameter = IntParameter(CPX_PARAM_TUNINGREPEAT);
     /// CPX_PARAM_TUNINGTILIM
     pub const TIME_LIMIT: DblParameter = DblParameter(CPX_PARAM_TUNINGTILIM);
+}
+
+pub mod read {
+    use ::param::{IntParameter, BoolParameter, StrParameter, LongParameter};
+    use ::cplex_sys::*;
+
+    // pub const API_ENCODING: StrParameter = StrParameter(CPX_PARAM_APIENCODING);
+    pub const CONSTRAINTS: IntParameter = IntParameter(CPX_PARAM_ROWREADLIM);
+    pub const DATACHECK: BoolParameter = BoolParameter(CPX_PARAM_DATACHECK);
+    pub const FILE_ENCODING: StrParameter = StrParameter(CPX_PARAM_FILEENCODING);
+    pub const NON_ZEROS: LongParameter = LongParameter(CPX_PARAM_NZREADLIM);
+    // pub const QP_NON_ZEROS: LongParameter = LongParameter(CPX_PARAM_QPNZREADLIM);
+    pub const SCALE: IntParameter = IntParameter(CPX_PARAM_SCAIND);
+    pub const VARIABLES: IntParameter = IntParameter(CPX_PARAM_COLREADLIM);
 }
 
 /// Common trait for all parameters
