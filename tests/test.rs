@@ -1,4 +1,3 @@
-use std::ptr;
 use std::path::Path;
 use std::fs;
 
@@ -10,15 +9,13 @@ use cplex::Raw;
 
 #[test]
 fn test_environment() {
-    let e = Env::new().unwrap();
-    assert!(ptr::null() != e.env);
+    Env::new().unwrap();
 }
 
 #[test]
 fn test_problem() {
     let e = Env::new().unwrap();
-    let lp = Problem::new(&e, "test").unwrap();
-    assert!(ptr::null() != lp.lp);
+    Problem::new(&e, "test").unwrap();
 }
 
 #[test]
