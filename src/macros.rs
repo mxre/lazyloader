@@ -1,5 +1,29 @@
 //! Macros for use inside this crate
 
+/// Print a call log message
+macro_rules! cpx_call_msg {
+    ($func:ident) => {{
+        if cfg!(feature="cpx_call_log") {
+            println!("[calling {}]", stringify!($func));
+        }
+    }};
+}
+
+/// Warp a CPLEX call, where we know no error handling is actually needed
+#[macro_export]
+macro_rules! cpx_safe {
+    ($func:ident, $env:expr) => {
+        cpx_safe!($func, $env, )
+    };
+
+    ($func:ident, $env:expr, $($arg:expr),*) => {{
+        cpx_call_msg!( $func );
+        unsafe {
+            $func( $env, $($arg),* )
+        }
+    }};
+}
+
 /// Wrap a CPLEX call and provide a return value for the encapsulating function
 #[macro_export]
 macro_rules! cpx_return {
@@ -8,9 +32,7 @@ macro_rules! cpx_return {
     };
 
     ($func:ident, $value:expr, $env:expr, $($arg:expr),*) => {{
-        if cfg!(feature="cpx_call_log") {
-            println!("[calling {}]", stringify!($func));
-        }
+        cpx_call_msg!( $func );
         match unsafe { $func( $env, $($arg),* ) } {
             0 => Ok($value),
             e => Err(Error::new($env, e)),

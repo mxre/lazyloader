@@ -28,7 +28,7 @@ impl Problem {
     /// `CPXLcreateprob`
     pub fn new(e: &env::Env, name: &str) -> Result<Self, Error> {
         let mut status = 0 as c_int;
-        let lp = unsafe { CPXLcreateprob(e.env, &mut status, str_as_ptr!(name)) };
+        let lp = cpx_safe!(CPXLcreateprob, e.env, &mut status, str_as_ptr!(name));
         match status {
             0 => {
                 assert!(!lp.is_null());
@@ -57,20 +57,21 @@ impl Problem {
     /// # Native call
     /// `CPXLgetstat`
     pub fn get_status(&self) -> i32 {
-        unsafe { CPXLgetstat(self.env, self.lp) }
+        cpx_safe!(CPXLgetstat, self.env, self.lp)
     }
 
     /// Get the textual representation of the CPLEX status
     /// # Native call
     /// `CPXLgetstat` and `CPXLgetstatstring`
     pub fn get_status_text(&self) -> String {
-        unsafe {
-            let status = self.get_status();
-            let message = CString::from_vec_unchecked(Vec::with_capacity(CPXMESSAGEBUFSIZE));
-            let c_msg = message.into_raw();
-            CPXLgetstatstring(self.env, status, c_msg);
-            CString::from_raw(c_msg).to_str().unwrap().to_string()
-        }
+        let status = self.get_status();
+        // create an owned string buffer in memory
+        let message = unsafe { CString::from_vec_unchecked(Vec::with_capacity(CPXMESSAGEBUFSIZE)) };
+        // raw pointer reference to the buffer
+        let c_msg = message.into_raw();
+        cpx_safe!(CPXLgetstatstring, self.env, status, c_msg);
+        // reclaim the string buffer
+        unsafe { CString::from_raw(c_msg).to_str().unwrap().to_string() }
     }
 
     /// Write the LP problem to a file
@@ -92,7 +93,7 @@ impl Problem {
 
 impl Drop for Problem {
     fn drop(&mut self) {
-        match unsafe { CPXLfreeprob(self.env, &mut &self.lp) } {
+        match cpx_safe!(CPXLfreeprob, self.env, &mut &self.lp) {
             0 => (),
             s => println!("{}", Error::new(self.env, s).description()),
         }
@@ -171,11 +172,11 @@ impl Raw for Problem {
     }
 
     fn get_num_rows(&self) -> i32 {
-        unsafe { CPXLgetnumrows(self.env, self.lp) }
+        cpx_safe!(CPXLgetnumrows, self.env, self.lp)
     }
 
     fn get_num_cols(&self) -> i32 {
-        unsafe { CPXLgetnumcols(self.env, self.lp) }
+        cpx_safe!(CPXLgetnumcols, self.env, self.lp)
     }
 
     fn set_coefficent(&mut self, i: i32, j: i32, coef: f64) -> Result<(), Error> {
