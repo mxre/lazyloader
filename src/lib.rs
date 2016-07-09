@@ -12,6 +12,7 @@ mod error;
 pub mod param;
 mod env;
 mod cplex;
+pub mod callback;
 pub mod model;
 
 pub use cplex::Raw;

@@ -304,7 +304,7 @@ impl Constraint {
 /// An expression is a sum of variables (each variable may have a coefficent)
 #[derive(Clone)]
 pub struct Expr {
-    vars: Vec<(usize, f64)>,
+    pub vars: Vec<(usize, f64)>,
     offs: f64,
 }
 

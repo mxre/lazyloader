@@ -286,7 +286,6 @@ pub type CPXHeuristicCallback = extern "C" fn(env: *const CPXenv,
                                               useraction_p: *mut c_int)
                                               -> c_int;
 
-// #[link(name = "cplex1260")]
 extern "C" {
     pub fn CPXLopenCPLEX(status: *mut c_int) -> *mut CPXenv;
 

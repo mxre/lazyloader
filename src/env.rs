@@ -4,10 +4,11 @@ use std::ptr;
 use std::ffi::{CStr, CString};
 
 extern crate libc;
-use self::libc::c_int;
+use self::libc::{c_int, c_void, c_double};
 
 use cplex_sys::*;
 use error::{Error, PrivateErrorConstructor};
+use callback::*;
 
 /// CPLEX environment
 pub struct Env {
@@ -82,6 +83,73 @@ impl Env {
             cpx_call!(CPXLsetlogfile, self.env, fp)
         }
     }
+
+    /// Set user cut callback
+    pub fn set_user_cut_callback(&self,
+                                 cb: UserCutCallback,
+                                 cbdata: UserData)
+                                 -> Result<(), Error> {
+        cpx_call!(CPXLsetusercutcallbackfunc,
+                  self.env,
+                  user_callback_wrapper,
+                  ptr::null_mut())
+    }
+
+    /// Set incumbent callback
+    pub fn set_incumbent_callback(&self,
+                                  cb: IncumbentCallback,
+                                  cbdata: UserData)
+                                  -> Result<(), Error> {
+        cpx_call!(CPXLsetincumbentcallbackfunc,
+                  self.env,
+                  incumbent_callback_wrapper,
+                  ptr::null_mut())
+    }
+
+    /// Set heuristic callback
+    pub fn set_heuristic_callback(&self,
+                                  cb: HeuristicCallback,
+                                  cbdata: UserData)
+                                  -> Result<(), Error> {
+        cpx_call!(CPXLsetheuristiccallbackfunc,
+                  self.env,
+                  heuristic_callback_wrapper,
+                  ptr::null_mut())
+    }
+}
+
+extern "C" fn user_callback_wrapper(env: *const CPXenv,
+                                    cbdata: *mut c_void,
+                                    wherefrom: c_int,
+                                    cbhandle: *mut c_void,
+                                    useraction_p: *mut c_int)
+                                    -> c_int {
+    0
+}
+
+extern "C" fn incumbent_callback_wrapper(env: *const CPXenv,
+                                         cbdata: *mut c_void,
+                                         wherefrom: c_int,
+                                         cbhandle: *mut c_void,
+                                         objval: c_double,
+                                         x: *const c_double,
+                                         isfeas_p: *mut c_int,
+                                         useraction_p: *mut c_int)
+                                         -> c_int {
+    println!("Test CB");
+    0
+}
+
+extern "C" fn heuristic_callback_wrapper(env: *const CPXenv,
+                                         cbdata: *mut c_void,
+                                         wherefrom: c_int,
+                                         cbhandle: *mut c_void,
+                                         objval_p: *mut c_double,
+                                         x: *mut c_double,
+                                         checkfeas_p: *mut c_int,
+                                         useraction_p: *mut c_int)
+                                         -> c_int {
+    0
 }
 
 impl Drop for Env {
@@ -107,7 +175,7 @@ pub trait ParameterType {
     fn set(self, env: *mut CPXenv, value: Self::InType) -> Result<(), Error>;
 
     /// Getter for the parameter
-	#[inline]
+    #[inline]
     fn get(self, env: *const CPXenv) -> Result<Self::ReturnType, Error>;
 }
 
