@@ -2,6 +2,7 @@
 use cplex_sys::*;
 use cplex_sys::constants::*;
 use error::{Error, PrivateErrorConstructor};
+use env::ParameterType;
 
 /// Type for integer parameter
 #[derive(Clone, PartialEq, Eq)]
@@ -184,22 +185,6 @@ pub mod read {
     // pub const QP_NON_ZEROS: LongParameter = LongParameter(CPX_PARAM_QPNZREADLIM);
     pub const SCALE: IntParameter = IntParameter(CPX_PARAM_SCAIND);
     pub const VARIABLES: IntParameter = IntParameter(CPX_PARAM_COLREADLIM);
-}
-
-/// Common trait for all parameters
-pub trait ParameterType {
-    /// Type of the paramters value, for the setter.
-    /// For strings This can be `&str`
-    type InType;
-    /// Type of the paramters value, for the getter
-    /// For strings this can be `String`
-    type ReturnType;
-
-    /// Setter for the parameter
-    fn set(self, env: *mut CPXenv, value: Self::InType) -> Result<(), Error>;
-
-    /// Getter for the parameter
-    fn get(self, env: *const CPXenv) -> Result<Self::ReturnType, Error>;
 }
 
 // IntParameter //////////////////////////////////////////////////////////////////////////////////

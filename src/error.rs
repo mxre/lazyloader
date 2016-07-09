@@ -33,11 +33,7 @@ impl PrivateErrorConstructor for Error {
     fn new(env: *const cplex_sys::CPXenv, code: i32) -> Error {
         unsafe {
             let message =
-                CString::from_vec_unchecked(
-                    Vec::with_capacity(
-                        ::constants::CPXMESSAGEBUFSIZE
-                    )
-                );
+                CString::from_vec_unchecked(Vec::with_capacity(::constants::CPXMESSAGEBUFSIZE));
             let c_msg = message.into_raw();
             cplex_sys::CPXLgeterrorstring(env, code, c_msg);
             Error {

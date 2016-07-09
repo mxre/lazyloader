@@ -3,7 +3,7 @@
 /// Print a call log message
 macro_rules! cpx_call_msg {
     ($func:ident) => {{
-        if cfg!(feature="cpx_call_log") {
+        if cfg!(feature = "cpx_call_log") {
             println!("[calling {}]", stringify!($func));
         }
     }};

@@ -5,16 +5,20 @@
 extern crate libc;
 use self::libc::{c_char, c_int, c_double, int64_t, c_void};
 
+/// CPLEX environement instance
 pub enum CPXenv {}
 
+/// CPLEX problem instance
 pub enum CPXlp {}
 
-pub enum CPXFile {}
+/// CPLEX file pointer
+pub enum CPXfile {}
 
 pub mod constants {
     extern crate libc;
     use self::libc::{c_int, c_double};
 
+    /// Lenght of a message buffer
     pub const CPXMESSAGEBUFSIZE: usize = 1024;
 
     pub const CPX_PARAM_ADVIND: c_int = 1001;
@@ -243,12 +247,15 @@ pub mod constants {
     pub const CPX_INFBOUND: c_double = 1.0E+20;
 }
 
+/// Type Nonzero matrix index
 #[cfg(target_pointer_width = "64")]
 pub type CPXNNZ = int64_t;
 
+/// Type for counter variables
 #[cfg(target_pointer_width = "64")]
 pub type CPXCNT = int64_t;
 
+/// Type for simple array dimensions
 #[cfg(target_pointer_width = "64")]
 pub type CPXDIM = c_int;
 
@@ -529,7 +536,7 @@ extern "C" {
                          filetype: *const c_char)
                          -> c_int;
 
-    pub fn CPXLsetlogfile(env: *const CPXenv, file: *mut CPXFile) -> c_int;
+    pub fn CPXLsetlogfile(env: *const CPXenv, file: *mut CPXfile) -> c_int;
 
-    pub fn CPXLfopen(filename: *const c_char, type_str: *const c_char) -> *mut CPXFile;
+    pub fn CPXLfopen(filename: *const c_char, type_str: *const c_char) -> *mut CPXfile;
 }

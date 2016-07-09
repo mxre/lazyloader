@@ -8,7 +8,6 @@ use self::libc::c_int;
 
 use cplex_sys::*;
 use error::{Error, PrivateErrorConstructor};
-use param::ParameterType;
 
 /// CPLEX environment
 pub struct Env {
@@ -43,13 +42,11 @@ impl Env {
     }
 
     /// Set a CPLEX parameter
-    #[inline]
     pub fn set_param<T: ParameterType>(&mut self, what: T, value: T::InType) -> Result<(), Error> {
         what.set(self.env, value)
     }
 
     /// Get a CPLEX parameter
-    #[inline]
     pub fn get_param<T: ParameterType>(&self, what: T) -> Result<T::ReturnType, Error> {
         what.get(self.env)
     }
@@ -96,14 +93,32 @@ impl Drop for Env {
     }
 }
 
-/// a trait for friends of env
+/// Common trait for all parameters
+pub trait ParameterType {
+    /// Type of the paramters value, for the setter.
+    /// For strings This can be `&str`
+    type InType;
+    /// Type of the paramters value, for the getter
+    /// For strings this can be `String`
+    type ReturnType;
+
+    /// Setter for the parameter
+    #[inline]
+    fn set(self, env: *mut CPXenv, value: Self::InType) -> Result<(), Error>;
+
+    /// Getter for the parameter
+	#[inline]
+    fn get(self, env: *const CPXenv) -> Result<Self::ReturnType, Error>;
+}
+
+/// Access raw CPLEX handle
 pub trait PrivateEnv {
-	fn get_env(&self) -> *mut CPXenv;
+    #[inline]
+    fn get_env(&self) -> *mut CPXenv;
 }
 
 impl PrivateEnv for Env {
-	#[inline]
-	fn get_env(&self) -> *mut CPXenv {
-		self.env
-	}
+    fn get_env(&self) -> *mut CPXenv {
+        self.env
+    }
 }

@@ -68,8 +68,9 @@ impl Problem {
     pub fn get_status_text(&self) -> String {
         let status = self.get_status();
         // create an owned string buffer in memory
-        let message =
-            unsafe { CString::from_vec_unchecked(Vec::with_capacity(constants::CPXMESSAGEBUFSIZE)) };
+        let message = unsafe {
+            CString::from_vec_unchecked(Vec::with_capacity(constants::CPXMESSAGEBUFSIZE))
+        };
         // raw pointer reference to the buffer
         let c_msg = message.into_raw();
         cpx_safe!(CPXLgetstatstring, self.env, status, c_msg);
@@ -103,7 +104,7 @@ impl Drop for Problem {
     }
 }
 
-/// Acessing CPLEX model directly
+/// Safe access to the CPLEX model
 pub trait Raw {
     /// Add an empty new row, i.e. a new constraint to the model
     fn new_row(&mut self, rhs: f64, sense: model::Sense, name: Option<&str>) -> Result<(), Error>;
@@ -134,6 +135,7 @@ pub trait Raw {
 }
 
 impl Raw for Problem {
+    #[inline]
     fn new_row(&mut self, rhs: f64, sense: model::Sense, name: Option<&str>) -> Result<(), Error> {
         let rowname: [*const c_char; 1] = [if name.is_some() {
                                                str_as_ptr!(name.unwrap())
@@ -151,6 +153,7 @@ impl Raw for Problem {
 
     }
 
+    #[inline]
     fn new_col(&mut self,
                obj: f64,
                lb: f64,
@@ -202,20 +205,21 @@ impl Raw for Problem {
     }
 }
 
-/// a trait for friends of Problem
+/// Access raw CPLEX handles
 pub trait PrivateProblem {
-	fn get_lp(&self) -> *mut CPXlp;
-	fn get_env(&self) -> *const CPXenv;
+    #[inline]
+    fn get_lp(&self) -> *mut CPXlp;
+
+    #[inline]
+    fn get_env(&self) -> *const CPXenv;
 }
 
 impl PrivateProblem for Problem {
-	#[inline]
-	fn get_lp(&self) -> *mut CPXlp {
-		self.lp
-	}
-	
-	#[inline]
-	fn get_env(&self) -> *const CPXenv {
-		self.env
-	}
+    fn get_lp(&self) -> *mut CPXlp {
+        self.lp
+    }
+
+    fn get_env(&self) -> *const CPXenv {
+        self.env
+    }
 }
