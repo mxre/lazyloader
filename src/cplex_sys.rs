@@ -1,7 +1,9 @@
 //! CPLEX Callable C-Library
 
+#![allow(dead_code)]
+
 extern crate libc;
-use self::libc::{c_char, c_int, c_double, int64_t};
+use self::libc::{c_char, c_int, c_double, int64_t, c_void};
 
 pub enum CPXenv {}
 
@@ -175,6 +177,55 @@ pub const CPXPROB_FIXEDMIQP: c_int = 8;
 pub const CPXPROB_QCP: c_int = 10;
 pub const CPXPROB_MIQCP: c_int = 11;
 
+// Use cuts as added
+pub const CPX_CALLBACK_DEFAULT: c_int = 0;
+// Exit optimization
+pub const CPX_CALLBACK_FAIL: c_int = 1;
+// Use cuts as added
+pub const CPX_CALLBACK_SET: c_int = 2;
+// Exit the cut loop and move on to branching.
+pub const CPX_CALLBACK_ABORT_CUT_LOOP: c_int = 3;
+
+// values for wherefrom
+pub const CPX_CALLBACK_PRIMAL: c_int = 1;
+pub const CPX_CALLBACK_DUAL: c_int = 2;
+pub const CPX_CALLBACK_NETWORK: c_int = 3;
+pub const CPX_CALLBACK_PRIMAL_CROSSOVER: c_int = 4;
+pub const CPX_CALLBACK_DUAL_CROSSOVER: c_int = 5;
+pub const CPX_CALLBACK_BARRIER: c_int = 6;
+pub const CPX_CALLBACK_PRESOLVE: c_int = 7;
+pub const CPX_CALLBACK_QPBARRIER: c_int = 8;
+pub const CPX_CALLBACK_QPSIMPLEX: c_int = 9;
+pub const CPX_CALLBACK_TUNING: c_int = 10;
+
+// values for mipstart effortlevel
+pub const CPX_MIPSTART_AUTO: c_int = 0;
+pub const CPX_MIPSTART_CHECKFEAS: c_int = 1;
+pub const CPX_MIPSTART_SOLVEFIXED: c_int = 2;
+pub const CPX_MIPSTART_SOLVEMIP: c_int = 3;
+pub const CPX_MIPSTART_REPAIR: c_int = 4;
+
+// values for get number of cuts
+pub const CPX_CUT_COVER: c_int = 0;
+pub const CPX_CUT_GUBCOVER: c_int = 1;
+pub const CPX_CUT_FLOWCOVER: c_int = 2;
+pub const CPX_CUT_CLIQUE: c_int = 3;
+pub const CPX_CUT_FRAC: c_int = 4;
+pub const CPX_CUT_MIR: c_int = 5;
+pub const CPX_CUT_FLOWPATH: c_int = 6;
+pub const CPX_CUT_DISJ: c_int = 7;
+pub const CPX_CUT_IMPLBD: c_int = 8;
+pub const CPX_CUT_ZEROHALF: c_int = 9;
+pub const CPX_CUT_MCF: c_int = 10;
+pub const CPX_CUT_LOCALCOVER: c_int = 11;
+pub const CPX_CUT_TIGHTEN: c_int = 12;
+pub const CPX_CUT_OBJDISJ: c_int = 13;
+pub const CPX_CUT_LANDP: c_int = 14;
+pub const CPX_CUT_USER: c_int = 15;
+pub const CPX_CUT_TABLE: c_int = 16;
+pub const CPX_CUT_SOLNPOOL: c_int = 17;
+pub const CPX_CUT_NUM_TYPES: c_int = 18;
+
 /// CPLEX header version inficates the version of the header definitions
 pub const CPX_VERSION: c_int = 12060200;
 pub const CPX_VERSION_VERSION: c_int = 12;
@@ -193,6 +244,33 @@ pub type CPXCNT = int64_t;
 
 #[cfg(target_pointer_width = "64")]
 pub type CPXDIM = c_int;
+
+pub type CPXCutCallback = extern "C" fn(env: *const CPXenv,
+                                        cbdata: *mut c_void,
+                                        wherefrom: c_int,
+                                        cbhandle: *mut c_void,
+                                        useraction_p: *mut c_int)
+                                        -> c_int;
+
+pub type CPXIncumbentCallback = extern "C" fn(env: *const CPXenv,
+                                              cbdata: *mut c_void,
+                                              wherefrom: c_int,
+                                              cbhandle: *mut c_void,
+                                              objval: c_double,
+                                              x: *const c_double,
+                                              isfeas_p: *mut c_int,
+                                              useraction_p: *mut c_int)
+                                              -> c_int;
+
+pub type CPXHeuristicCallback = extern "C" fn(env: *const CPXenv,
+                                              cbdata: *mut c_void,
+                                              wherefrom: c_int,
+                                              cbhandle: *mut c_void,
+                                              objval_p: *mut c_double,
+                                              x: *mut c_double,
+                                              checkfeas_p: *mut c_int,
+                                              useraction_p: *mut c_int)
+                                              -> c_int;
 
 // #[link(name = "cplex1260")]
 extern "C" {
@@ -297,6 +375,25 @@ extern "C" {
 
     pub fn CPXLcopyctype(env: *const CPXenv, lp: *mut CPXlp, ctype: *const c_char) -> c_int;
 
+    pub fn CPXLaddmipstarts(env: *const CPXenv,
+                            lp: *mut CPXlp,
+                            mcnt: c_int,
+                            nzcnt: CPXNNZ,
+                            beg: *const CPXNNZ,
+                            varindices: *const CPXDIM,
+                            values: *const c_double,
+                            effortlevel: *const c_int,
+                            mipstartname: *const *const c_char)
+                            -> c_int;
+
+    pub fn CPXLgetmipstartindex(env: *const CPXenv,
+                                lp: *mut CPXlp,
+                                lname_str: *const c_char,
+                                index_p: *mut c_int)
+                                -> c_int;
+
+    pub fn CPXLdelsetmipstarts(env: *const CPXenv, lp: *mut CPXlp, delstat: *const c_int) -> c_int;
+
     pub fn CPXLpresolve(env: *const CPXenv, lp: *mut CPXlp, method: c_int) -> c_int;
 
     pub fn CPXLcutcallbackadd(env: *const CPXenv,
@@ -309,6 +406,63 @@ extern "C" {
                               cutval: *const c_double,
                               purgeable: c_int)
                               -> c_int;
+
+    pub fn CPXLgetcallbacklp(env: *const CPXenv,
+                             cbdata: *mut c_void,
+                             wherefrom: c_int,
+                             lp: *const CPXlp)
+                             -> c_int;
+
+    pub fn CPXLsetusercutcallbackfunc(env: *mut CPXenv,
+                                      cutcallback: CPXCutCallback,
+                                      cbhandle: *mut c_void)
+                                      -> c_int;
+
+    pub fn CPXLsetincumbentcallbackfunc(env: *mut CPXenv,
+                                        incumbentcallback: CPXIncumbentCallback,
+                                        cbhandle: *mut c_void)
+                                        -> c_int;
+
+    pub fn CPXLsetheuristiccallbackfunc(env: *mut CPXenv,
+                                        heuristiccallback: CPXHeuristicCallback,
+                                        cbhandle: *mut c_void)
+                                        -> c_int;
+
+    pub fn CPXLaddusercuts(env: *const CPXenv,
+                           lp: *mut CPXlp,
+                           rcnt: CPXDIM,
+                           nzcnt: CPXNNZ,
+                           rhs: *const c_double,
+                           sense: *const c_char,
+                           rmatbeg: *const CPXNNZ,
+                           rmatind: *const CPXDIM,
+                           rmatval: *const c_double,
+                           rowname: *const *const c_char)
+                           -> c_int;
+
+    pub fn CPXLfreeusercuts(env: *const CPXenv, lp: *mut CPXlp) -> c_int;
+
+    pub fn CPXLaddlazyconstraints(env: *const CPXenv,
+                                  lp: *mut CPXlp,
+                                  rcnt: CPXDIM,
+                                  nzcnt: CPXNNZ,
+                                  rhs: *const c_double,
+                                  sense: *const c_char,
+                                  rmatbeg: *const CPXNNZ,
+                                  rmatind: *const CPXDIM,
+                                  rmatval: *const c_double,
+                                  rowname: *const *const c_char)
+                                  -> c_int;
+
+    pub fn CPXLfreelazyconstraints(env: *const CPXenv, lp: *mut CPXlp) -> c_int;
+
+    pub fn CPXLgetnumcuts(env: *const CPXenv,
+                          lp: *mut CPXlp,
+                          cuttype: c_int,
+                          num_p: *mut CPXDIM)
+                          -> c_int;
+
+    pub fn CPXLgetnummipstarts(env: *const CPXenv, lp: *mut CPXlp) -> c_int;
 
     pub fn CPXLgetprobtype(env: *const CPXenv, lp: *mut CPXlp) -> c_int;
 
@@ -324,6 +478,12 @@ extern "C" {
                              status: c_int,
                              message: *mut c_char)
                              -> *const c_char;
+
+    pub fn CPXLgetbestobjval(env: *const CPXenv, lp: *mut CPXlp, objval: *mut c_double) -> c_int;
+
+    pub fn CPXLgetmiprelgap(env: *const CPXenv, lp: *mut CPXlp, gap: *mut c_double) -> c_int;
+
+    pub fn CPXLgetcutoff(env: *const CPXenv, lp: *mut CPXlp, cutoff: *mut c_double) -> c_int;
 
     pub fn CPXLgetobjval(env: *const CPXenv, lp: *mut CPXlp, objval: *mut c_double) -> c_int;
 

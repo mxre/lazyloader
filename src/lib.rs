@@ -1,7 +1,5 @@
 //! CPLEX Rust adapter crate
 
-#![allow(dead_code)]
-
 mod cplex_sys;
 
 #[macro_use]
