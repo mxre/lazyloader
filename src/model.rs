@@ -40,7 +40,7 @@ use std::convert::AsRef;
 extern crate libc;
 use self::libc::c_char;
 
-use cplex::{Problem, ExtractableModel};
+use cplex::{Problem, ExtractableModel, PrivateProblem};
 use error::{Error, PrivateErrorConstructor};
 use cplex_sys::*;
 
@@ -243,9 +243,11 @@ impl ExtractableModel for Model {
             obj[var] = coef;
         }
 
+        let env = p.get_env();
+        let cpx = p.get_lp();
         try!(cpx_call!(CPXLcopylpwnames,
-                       p.env,
-                       p.lp,
+                       env,
+                       cpx,
                        numcols as i32,
                        numrows as i32,
                        self.obj as i32,
@@ -261,8 +263,8 @@ impl ExtractableModel for Model {
                        rng,
                        colnames.as_ptr(),
                        rownames.as_ptr()));
-        try!(cpx_call!(CPXLcopyctype, p.env, p.lp, ct.as_ptr()));
-        // try!(cpx_call!(CPXLchgobjoffset, p.env, p.lp, o.offs));
+        try!(cpx_call!(CPXLcopyctype, env, cpx, ct.as_ptr()));
+        // try!(cpx_call!(CPXLchgobjoffset, env, cpx, o.offs));
         Ok(())
     }
 }

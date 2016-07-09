@@ -12,7 +12,7 @@ use param::ParameterType;
 
 /// CPLEX environment
 pub struct Env {
-    pub env: *mut CPXenv,
+    env: *mut CPXenv,
 }
 
 impl Env {
@@ -27,7 +27,7 @@ impl Env {
                 assert!(!env.is_null());
                 cpx_safe!(CPXLsetstrparam,
                           env,
-                          CPX_PARAM_APIENCODING,
+                          constants::CPX_PARAM_APIENCODING,
                           str_as_ptr!("UTF-8"));
                 Ok(Env { env: env })
             }
@@ -43,11 +43,13 @@ impl Env {
     }
 
     /// Set a CPLEX parameter
+    #[inline]
     pub fn set_param<T: ParameterType>(&mut self, what: T, value: T::InType) -> Result<(), Error> {
         what.set(self.env, value)
     }
 
     /// Get a CPLEX parameter
+    #[inline]
     pub fn get_param<T: ParameterType>(&self, what: T) -> Result<T::ReturnType, Error> {
         what.get(self.env)
     }
@@ -64,6 +66,7 @@ impl Env {
     /// Get the CPLEX version as a string
     /// # Native call
     /// `CPXLversion`
+    #[inline]
     #[allow(unused_unsafe)]
     pub fn version(&self) -> &str {
         ptr_as_str!(cpx_safe!(CPXLversion, self.env))
@@ -91,4 +94,16 @@ impl Drop for Env {
             s => println!("{}", Error::new(ptr::null(), s).description()),
         }
     }
+}
+
+/// a trait for friends of env
+pub trait PrivateEnv {
+	fn get_env(&self) -> *mut CPXenv;
+}
+
+impl PrivateEnv for Env {
+	#[inline]
+	fn get_env(&self) -> *mut CPXenv {
+		self.env
+	}
 }

@@ -54,7 +54,7 @@ macro_rules! cpx_call {
     };
 }
 
-/// Shorthand to convert a char* to a &str
+/// Shorthand to convert a `char*` to a `&str`
 ///
 /// This will panic on UTF8 errors
 #[macro_export]
@@ -66,7 +66,7 @@ macro_rules! ptr_as_str {
     };
 }
 
-/// Shorthand to convert a &str a char*
+/// Shorthand to convert a `&str` a `char*`
 ///
 /// This will panic on UTF8 errors
 #[macro_export]

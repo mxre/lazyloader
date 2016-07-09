@@ -15,3 +15,8 @@ pub use cplex::Raw;
 pub use error::Error;
 pub use cplex::Problem;
 pub use env::Env;
+
+/// Orginal C names for CPLEX constants
+pub mod constants {
+    pub use cplex_sys::constants::*;
+}

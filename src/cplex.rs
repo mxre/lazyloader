@@ -9,12 +9,13 @@ use self::libc::{c_int, c_char};
 use cplex_sys::*;
 use error::{Error, PrivateErrorConstructor};
 use env;
+use env::PrivateEnv;
 use model;
 
 /// LP problem and solver
 pub struct Problem {
-    pub env: *const CPXenv,
-    pub lp: *mut CPXlp,
+    env: *const CPXenv,
+    lp: *mut CPXlp,
 }
 
 pub trait ExtractableModel {
@@ -28,16 +29,16 @@ impl Problem {
     /// `CPXLcreateprob`
     pub fn new(e: &env::Env, name: &str) -> Result<Self, Error> {
         let mut status = 0 as c_int;
-        let lp = cpx_safe!(CPXLcreateprob, e.env, &mut status, str_as_ptr!(name));
+        let lp = cpx_safe!(CPXLcreateprob, e.get_env(), &mut status, str_as_ptr!(name));
         match status {
             0 => {
                 assert!(!lp.is_null());
                 Ok(Problem {
-                    env: e.env,
+                    env: e.get_env(),
                     lp: lp,
                 })
             }
-            _ => Err(Error::new(e.env, status)),
+            _ => Err(Error::new(e.get_env(), status)),
         }
     }
 
@@ -46,9 +47,9 @@ impl Problem {
     /// `CPXLmipopt`
     pub fn solve(&mut self) -> Result<(), Error> {
         match unsafe { CPXLgetprobtype(self.env, self.lp) } {
-            CPXPROB_LP => cpx_call!(CPXLlpopt, self.env, self.lp),
-            CPXPROB_MILP |
-            CPXPROB_FIXEDMILP => cpx_call!(CPXLmipopt, self.env, self.lp),
+            constants::CPXPROB_LP => cpx_call!(CPXLlpopt, self.env, self.lp),
+            constants::CPXPROB_MILP |
+            constants::CPXPROB_FIXEDMILP => cpx_call!(CPXLmipopt, self.env, self.lp),
             _ => unimplemented!(),
         }
     }
@@ -56,6 +57,7 @@ impl Problem {
     /// Get the numeric CPLEX status
     /// # Native call
     /// `CPXLgetstat`
+    #[inline]
     pub fn get_status(&self) -> i32 {
         cpx_safe!(CPXLgetstat, self.env, self.lp)
     }
@@ -66,7 +68,8 @@ impl Problem {
     pub fn get_status_text(&self) -> String {
         let status = self.get_status();
         // create an owned string buffer in memory
-        let message = unsafe { CString::from_vec_unchecked(Vec::with_capacity(CPXMESSAGEBUFSIZE)) };
+        let message =
+            unsafe { CString::from_vec_unchecked(Vec::with_capacity(constants::CPXMESSAGEBUFSIZE)) };
         // raw pointer reference to the buffer
         let c_msg = message.into_raw();
         cpx_safe!(CPXLgetstatstring, self.env, status, c_msg);
@@ -171,25 +174,48 @@ impl Raw for Problem {
                   colname.as_ptr())
     }
 
+    #[inline]
     fn get_num_rows(&self) -> i32 {
         cpx_safe!(CPXLgetnumrows, self.env, self.lp)
     }
 
+    #[inline]
     fn get_num_cols(&self) -> i32 {
         cpx_safe!(CPXLgetnumcols, self.env, self.lp)
     }
 
+    #[inline]
     fn set_coefficent(&mut self, i: i32, j: i32, coef: f64) -> Result<(), Error> {
         cpx_call!(CPXLchgcoef, self.env, self.lp, i, j, coef)
     }
 
+    #[inline]
     fn get_x(&self, begin: i32, end: i32) -> Result<Vec<f64>, Error> {
         let sz = (end - begin + 1) as usize;
         let mut v = vec!(0.0; sz);
         cpx_return!(CPXLgetx, v, self.env, self.lp, v.as_mut_ptr(), begin, end)
     }
 
+    #[inline]
     fn set_objective_sense(&mut self, sense: model::Objective) -> Result<(), Error> {
         cpx_call!(CPXLchgobjsen, self.env, self.lp, sense as c_int)
     }
+}
+
+/// a trait for friends of Problem
+pub trait PrivateProblem {
+	fn get_lp(&self) -> *mut CPXlp;
+	fn get_env(&self) -> *const CPXenv;
+}
+
+impl PrivateProblem for Problem {
+	#[inline]
+	fn get_lp(&self) -> *mut CPXlp {
+		self.lp
+	}
+	
+	#[inline]
+	fn get_env(&self) -> *const CPXenv {
+		self.env
+	}
 }

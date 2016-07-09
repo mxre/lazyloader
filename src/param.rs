@@ -1,5 +1,6 @@
 //! CPLEX parameter
 use cplex_sys::*;
+use cplex_sys::constants::*;
 use error::{Error, PrivateErrorConstructor};
 
 /// Type for integer parameter
@@ -41,7 +42,7 @@ pub const SCREEN_OUTPUT: BoolParameter = BoolParameter(CPX_PARAM_SCRIND);
 /// Paramter driving alogrithm emphasis
 pub mod emphasis {
     use ::param::{BoolParameter, IntParameter};
-    use ::cplex_sys::*;
+    use ::cplex_sys::constants::*;
 
     /// CPX_PARAM_MEMORYEMPHASIS
     pub const MEMORY: BoolParameter = BoolParameter(CPX_PARAM_MEMORYEMPHASIS);
@@ -54,16 +55,17 @@ pub mod emphasis {
 /// Parameters driving the MIP algorithm
 pub mod mip {
     use ::param::{IntParameter, LongParameter};
-    use ::cplex_sys::*;
+    use ::cplex_sys::constants::*;
 
     /// CPX_PARAM_MIPDISPLAY
     pub const DISPLAY: IntParameter = IntParameter(CPX_PARAM_MIPDISPLAY);
     /// CPX_PARAM_MIPINTERVAL
     pub const INTERVAL: LongParameter = LongParameter(CPX_PARAM_MIPINTERVAL);
 
+    /// Parameters controling cuts
     pub mod cuts {
         use ::param::IntParameter;
-        use ::cplex_sys::*;
+        use ::cplex_sys::constants::*;
 
         /// CPX_PARAM_CLIQUES
         pub const CLIQUES: IntParameter = IntParameter(CPX_PARAM_CLIQUES);
@@ -94,7 +96,7 @@ pub mod mip {
     /// Tolerances for the MIP algorithm
     pub mod tolerances {
         use ::param::DblParameter;
-        use ::cplex_sys::*;
+        use ::cplex_sys::constants::*;
 
         /// CPX_PARAM_EPAGAP
         pub const ABSOLUTE_GAP: DblParameter = DblParameter(CPX_PARAM_EPAGAP);
@@ -115,9 +117,10 @@ pub mod mip {
     }
 }
 
+/// Parameters controling CPLEX preprocessing
 pub mod preprocessing {
     use ::param::{IntParameter, LongParameter, BoolParameter};
-    use ::cplex_sys::*;
+    use ::cplex_sys::constants::*;
 
     /// CPX_PARAM_AGGIND
     pub const AGGREGATOR: IntParameter = IntParameter(CPX_PARAM_AGGIND);
@@ -151,9 +154,10 @@ pub mod preprocessing {
     pub const SYMMETRY: IntParameter = IntParameter(CPX_PARAM_SYMMETRY);
 }
 
+/// Additional tuning parameters and output
 pub mod tune {
     use ::param::{IntParameter, DblParameter};
-    use ::cplex_sys::*;
+    use ::cplex_sys::constants::*;
 
     /// CPX_PARAM_TUNINGDETTILIM
     pub const DET_TIME_LIMIT: DblParameter = DblParameter(CPX_PARAM_TUNINGDETTILIM);
@@ -167,9 +171,10 @@ pub mod tune {
     pub const TIME_LIMIT: DblParameter = DblParameter(CPX_PARAM_TUNINGTILIM);
 }
 
+/// File read and write Parameters
 pub mod read {
     use ::param::{IntParameter, BoolParameter, StrParameter, LongParameter};
-    use ::cplex_sys::*;
+    use ::cplex_sys::constants::*;
 
     // pub const API_ENCODING: StrParameter = StrParameter(CPX_PARAM_APIENCODING);
     pub const CONSTRAINTS: IntParameter = IntParameter(CPX_PARAM_ROWREADLIM);
