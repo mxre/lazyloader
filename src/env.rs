@@ -2,6 +2,9 @@
 use std::path::Path;
 use std::ptr;
 use std::ffi::{CStr, CString};
+use std::ops::FnMut;
+use std::any::Any;
+use std::marker::Send;
 
 extern crate libc;
 use self::libc::{c_int, c_void, c_double};
@@ -13,6 +16,7 @@ use callback::*;
 /// CPLEX environment
 pub struct Env {
     env: *mut CPXenv,
+    cb: Box<CallbackEnvelope>,
 }
 
 impl Env {
@@ -25,11 +29,16 @@ impl Env {
         match status {
             0 => {
                 assert!(!env.is_null());
+                // set the API to the same encoding as Rust
+                // this will effect all string passed through CPLEX
                 cpx_safe!(CPXLsetstrparam,
                           env,
                           constants::CPX_PARAM_APIENCODING,
                           str_as_ptr!("UTF-8"));
-                Ok(Env { env: env })
+                Ok(Env {
+                    env: env,
+                    cb: Default::default(),
+                })
             }
             _ => Err(Error::new(ptr::null(), status)),
         }
@@ -85,37 +94,85 @@ impl Env {
     }
 
     /// Set user cut callback
-    pub fn set_user_cut_callback(&self,
-                                 cb: UserCutCallback,
-                                 cbdata: UserData)
-                                 -> Result<(), Error> {
+    pub fn set_user_cut_callback<F, O>(&self, cb: F, cbdata: O) -> Result<(), Error>
+        where F: FnMut(&Callback, O) -> Action
+    {
         cpx_call!(CPXLsetusercutcallbackfunc,
                   self.env,
-                  user_callback_wrapper,
+                  Some(user_callback_wrapper),
                   ptr::null_mut())
     }
 
+    /// Unset user cut callback
+    pub fn clear_user_cut_callback(&self) -> Result<(), Error> {
+        cpx_call!(CPXLsetusercutcallbackfunc, self.env, None, ptr::null_mut())
+    }
+
     /// Set incumbent callback
-    pub fn set_incumbent_callback(&self,
-                                  cb: IncumbentCallback,
-                                  cbdata: UserData)
-                                  -> Result<(), Error> {
+    pub fn set_incumbent_callback<F>(&mut self,
+                                     cb: F,
+                                     cbdata: Option<Box<Any>>)
+                                     -> Result<(), Error>
+        where F: FnMut(&Callback,
+                       &Option<Box<Any>>,
+                       f64,
+                       &Vec<f64>)
+                       -> (bool, Action) + Send + 'static
+    {
+        self.cb.incumbent = Some(Box::new(cb));
+        self.cb.incumbent_data = cbdata;
         cpx_call!(CPXLsetincumbentcallbackfunc,
                   self.env,
-                  incumbent_callback_wrapper,
+                  Some(incumbent_callback_wrapper),
+                  &*self.cb as *const _ as *mut _)
+    }
+
+    /// Unset incumbent callback
+    pub fn clear_incumbent_callback(&mut self) -> Result<(), Error> {
+        self.cb.incumbent = None;
+        self.cb.incumbent_data = None;
+        cpx_call!(CPXLsetincumbentcallbackfunc,
+                  self.env,
+                  None,
                   ptr::null_mut())
     }
 
     /// Set heuristic callback
-    pub fn set_heuristic_callback(&self,
-                                  cb: HeuristicCallback,
-                                  cbdata: UserData)
-                                  -> Result<(), Error> {
+    pub fn set_heuristic_callback<F>(&mut self,
+                                     cb: F,
+                                     cbdata: Option<Box<Any>>)
+                                     -> Result<(), Error>
+        where F: FnMut(&Callback,
+                       &Option<Box<Any>>,
+                       &mut f64,
+                       &mut Vec<f64>)
+                       -> (bool, Action) + 'static
+    {
+        self.cb.heuristic = Some(Box::new(cb));
+        self.cb.heuristic_data = Some(Box::new(cbdata));
         cpx_call!(CPXLsetheuristiccallbackfunc,
                   self.env,
-                  heuristic_callback_wrapper,
+                  Some(heuristic_callback_wrapper),
+                  &*self.cb as *const _ as *mut _)
+    }
+
+    /// Unset heuristic callback
+    pub fn clear_heuristict_callback(&mut self) -> Result<(), Error> {
+        self.cb.heuristic = None;
+        self.cb.heuristic_data = None;
+        cpx_call!(CPXLsetheuristiccallbackfunc,
+                  self.env,
+                  None,
                   ptr::null_mut())
     }
+}
+
+#[derive(Default)]
+struct CallbackEnvelope {
+    incumbent: Option<Box<FnMut(&Callback, &Option<Box<Any>>, f64, &Vec<f64>) -> (bool, Action)>>,
+    incumbent_data: Option<Box<Any>>,
+    heuristic: Option<Box<FnMut(&Callback, &Option<Box<Any>>, &mut f64, &mut Vec<f64>) -> (bool, Action)>>,
+    heuristic_data: Option<Box<Any>>,
 }
 
 extern "C" fn user_callback_wrapper(env: *const CPXenv,
@@ -124,6 +181,10 @@ extern "C" fn user_callback_wrapper(env: *const CPXenv,
                                     cbhandle: *mut c_void,
                                     useraction_p: *mut c_int)
                                     -> c_int {
+    println!("UCB");
+    unsafe {
+        *useraction_p = Action::Default as i32;
+    }
     0
 }
 
@@ -136,7 +197,28 @@ extern "C" fn incumbent_callback_wrapper(env: *const CPXenv,
                                          isfeas_p: *mut c_int,
                                          useraction_p: *mut c_int)
                                          -> c_int {
-    println!("Test CB");
+    println!("ICB");
+    let cb = Callback::from_cpx(env, cbdata, wherefrom);
+    let x: Vec<f64> = Vec::new();
+    let ret = unsafe {
+        (*(cbhandle as *mut CallbackEnvelope))
+            .incumbent
+            .as_mut()
+            .map_or((false, Action::Default), |v| {
+                v(&cb,
+                  &(*(cbhandle as *mut CallbackEnvelope)).incumbent_data,
+                  objval,
+                  &x)
+            })
+    };
+    unsafe {
+        *isfeas_p = if ret.0 {
+            1
+        } else {
+            0
+        };
+        *useraction_p = ret.1 as i32;
+    }
     0
 }
 
@@ -149,6 +231,16 @@ extern "C" fn heuristic_callback_wrapper(env: *const CPXenv,
                                          checkfeas_p: *mut c_int,
                                          useraction_p: *mut c_int)
                                          -> c_int {
+    println!("HCB");
+    let ret = (false, Action::Default);
+    unsafe {
+        *checkfeas_p = if ret.0 {
+            1
+        } else {
+            0
+        };
+        *useraction_p = ret.1 as i32;
+    }
     0
 }
 
@@ -177,6 +269,10 @@ pub trait ParameterType {
     /// Getter for the parameter
     #[inline]
     fn get(self, env: *const CPXenv) -> Result<Self::ReturnType, Error>;
+}
+
+pub trait CallbackPrivate {
+    fn from_cpx(env: *const CPXenv, cbdata: *mut c_void, wherefrom: i32) -> Callback;
 }
 
 /// Access raw CPLEX handle

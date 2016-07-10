@@ -427,17 +427,17 @@ extern "C" {
                              -> c_int;
 
     pub fn CPXLsetusercutcallbackfunc(env: *mut CPXenv,
-                                      cutcallback: CPXCutCallback,
+                                      cutcallback: Option<CPXCutCallback>,
                                       cbhandle: *mut c_void)
                                       -> c_int;
 
     pub fn CPXLsetincumbentcallbackfunc(env: *mut CPXenv,
-                                        incumbentcallback: CPXIncumbentCallback,
+                                        incumbentcallback: Option<CPXIncumbentCallback>,
                                         cbhandle: *mut c_void)
                                         -> c_int;
 
     pub fn CPXLsetheuristiccallbackfunc(env: *mut CPXenv,
-                                        heuristiccallback: CPXHeuristicCallback,
+                                        heuristiccallback: Option<CPXHeuristicCallback>,
                                         cbhandle: *mut c_void)
                                         -> c_int;
 

@@ -4,6 +4,7 @@ extern crate libc;
 use self::libc::c_void;
 
 use cplex_sys::*;
+use env::CallbackPrivate;
 use error::{Error, PrivateErrorConstructor};
 use model::{Expr, Sense};
 
@@ -60,19 +61,12 @@ impl Callback {
     }
 }
 
-/// Data supplied by the user
-pub type UserData = *mut c_void;
-
-/// User cut callback
-pub type UserCutCallback = fn(cb: &Callback, cbdata: UserData) -> Action;
-
-/// Return a tuple of *is feasible* and *action*
-pub type IncumbentCallback = fn(cb: &Callback, cbdata: UserData, objval: f64, x: Vec<f64>)
-                                -> (bool, Action);
-
-/// Return a tuple of *check feasibility* and *action*
-pub type HeuristicCallback = fn(cb: &Callback,
-                                cbdata: UserData,
-                                objval: &mut f64,
-                                x: &mut Vec<f64>)
-                                -> (bool, Action);
+impl CallbackPrivate for Callback {
+    fn from_cpx(env: *const CPXenv, cbdata: *mut c_void, wherefrom: i32) -> Callback {
+        Callback {
+            env: env,
+            cbdata: cbdata,
+            wherefrom: wherefrom,
+        }
+    }
+}
