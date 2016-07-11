@@ -1,4 +1,20 @@
 //! User supplied callbacks
+//!
+//! # Example
+//! ```
+//! use cplex::callback;
+//!
+//! // initialize CPLEX
+//! let mut env = cplex::Env::new().unwrap();
+//! // set callback closure
+//! env.set_incumbent_callback(| cb: &callback::Callback,
+//!                              objval: f64,
+//!                              x: &Vec<f64> |
+//!                              -> (bool, callback::Action) {
+//!     println!("Found Solution: value {} with x = {:?}", objval, x);
+//!     (true, callback::Action::Default)
+//! }).unwrap();
+//! ```
 
 extern crate libc;
 use self::libc::c_void;
@@ -32,6 +48,8 @@ pub struct Callback {
     env: *mut CPXenv,
     cbdata: *mut c_void,
     wherefrom: i32,
+    e: Env,
+    p: Problem,
 }
 
 impl Callback {
@@ -63,23 +81,29 @@ impl Callback {
                   purgeable as i32)
     }
 
-    pub fn get_environment(&self) -> Env {
-        Env::from_cpx(self.env)
+    /// get the CPLEX environment
+    #[inline]
+    pub fn get_environment(&self) -> &Env {
+        &self.e
     }
 
-    pub fn get_problem(&self) -> Problem {
-        let mut lp: *mut CPXlp = ptr::null_mut();
-        cpx_safe!(CPXLgetcallbacklp, self.env, self.cbdata, self.wherefrom, &mut lp);
-        Problem::from_cpx(self.env, lp)
+    /// get the corresponding CPLEX Problem
+    #[inline]
+    pub fn get_problem(&self) -> &Problem {
+        &self.p
     }
 }
 
 impl CallbackPrivate for Callback {
     fn from_cpx(env: *mut CPXenv, cbdata: *mut c_void, wherefrom: i32) -> Callback {
+        let mut lp: *mut CPXlp = ptr::null_mut();
+        cpx_safe!(CPXLgetcallbacklp, env, cbdata, wherefrom, &mut lp);
         Callback {
             env: env,
             cbdata: cbdata,
             wherefrom: wherefrom,
+            e: Env::from_cpx(env),
+            p: Problem::from_cpx(env, lp),
         }
     }
 }

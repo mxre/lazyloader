@@ -538,4 +538,6 @@ extern "C" {
     pub fn CPXLsetlogfile(env: *const CPXenv, file: *mut CPXfile) -> c_int;
 
     pub fn CPXLfopen(filename: *const c_char, type_str: *const c_char) -> *mut CPXfile;
+
+    pub fn CPXLfclose(file: *mut CPXfile) -> c_int;
 }

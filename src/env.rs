@@ -16,6 +16,7 @@ use callback::*;
 /// CPLEX environment
 pub struct Env {
     env: *mut CPXenv,
+    logfile: *mut CPXfile,
     cb: Box<CallbackEnvelope>,
     dispose: bool,
 }
@@ -40,6 +41,7 @@ impl Env {
                     env: env,
                     cb: Default::default(),
                     dispose: true,
+                    logfile: ptr::null_mut(),
                 })
             }
             _ => Err(Error::new(ptr::null(), status)),
@@ -81,17 +83,27 @@ impl Env {
         ptr_as_str!(cpx_safe!(CPXLversion, self.env))
     }
 
-    /// Set a logfile for all CPLEX output
+    /// Set a logfile for all CPLEX output, or `None` to disable the logfile.
+    /// A previously set file will be closed. Open files will be close on dispose.
     /// # Native call
-    /// `CPXLfopen` and `CPXLsetlogfile`
-    pub fn set_logfile<P: AsRef<Path>>(&self, file: P) -> Result<(), Error> {
-        let fp = cpx_safe!(CPXLfopen,
-                           str_as_ptr!(file.as_ref().to_str().unwrap()),
-                           str_as_ptr!("w"));
-        if fp.is_null() {
-            Err(Error::custom_error("Could not open/create logfile"))
-        } else {
-            cpx_call!(CPXLsetlogfile, self.env, fp)
+    /// `CPXLfopen`, `CPXLfclose` and `CPXLsetlogfile`
+    pub fn set_logfile<P: AsRef<Path>>(&mut self, file: Option<P>) -> Result<(), Error> {
+        if !self.logfile.is_null() {
+            cpx_safe!(CPXLfclose, self.logfile);
+            self.logfile = ptr::null_mut();
+        }
+        match file {
+            Some(filepath) => {
+                self.logfile = cpx_safe!(CPXLfopen,
+                                         str_as_ptr!(filepath.as_ref().to_str().unwrap()),
+                                         str_as_ptr!("w"));
+                if self.logfile.is_null() {
+                    Err(Error::custom_error("Could not open/create logfile"))
+                } else {
+                    cpx_call!(CPXLsetlogfile, self.env, self.logfile)
+                }
+            }
+            None => Ok(()),
         }
     }
 
@@ -161,14 +173,13 @@ struct CallbackEnvelope {
     heuristic: Option<Box<FnMut(&Callback, &mut f64, &mut Vec<f64>) -> (bool, Action)>>,
 }
 
-/// Wrap the user callback clojure
+/// Wrap the user callback closure
 extern "C" fn user_callback_wrapper(env: *mut CPXenv,
                                     cbdata: *mut c_void,
                                     wherefrom: c_int,
                                     cbhandle: *mut c_void,
                                     useraction_p: *mut c_int)
                                     -> c_int {
-    // println!("UCB");
     let cb = Callback::from_cpx(env, cbdata, wherefrom);
     let ret = unsafe {
         (*(cbhandle as *mut CallbackEnvelope))
@@ -182,7 +193,7 @@ extern "C" fn user_callback_wrapper(env: *mut CPXenv,
     0
 }
 
-/// Wrap the incumbent callback clojure
+/// Wrap the incumbent callback closure
 extern "C" fn incumbent_callback_wrapper(env: *mut CPXenv,
                                          cbdata: *mut c_void,
                                          wherefrom: c_int,
@@ -192,7 +203,6 @@ extern "C" fn incumbent_callback_wrapper(env: *mut CPXenv,
                                          isfeas_p: *mut c_int,
                                          useraction_p: *mut c_int)
                                          -> c_int {
-    //println!("ICB");
     let cb = Callback::from_cpx(env, cbdata, wherefrom);
     let cols = cb.get_problem().get_num_cols() as usize;
     let x: Vec<f64> = unsafe { Vec::from_raw_parts(x, cols, cols) };
@@ -213,7 +223,7 @@ extern "C" fn incumbent_callback_wrapper(env: *mut CPXenv,
     0
 }
 
-/// Wrap the heuristic callback clojure
+/// Wrap the heuristic callback closure
 extern "C" fn heuristic_callback_wrapper(env: *mut CPXenv,
                                          cbdata: *mut c_void,
                                          wherefrom: c_int,
@@ -248,6 +258,9 @@ extern "C" fn heuristic_callback_wrapper(env: *mut CPXenv,
 impl Drop for Env {
     fn drop(&mut self) {
         if self.dispose {
+            if !self.logfile.is_null() {
+                cpx_safe!(CPXLfclose, self.logfile);
+            }
             match cpx_safe!(CPXLcloseCPLEX, &mut &self.env) {
                 0 => (),
                 s => println!("{}", Error::new(ptr::null(), s).description()),
@@ -300,6 +313,7 @@ impl PrivateEnv for Env {
         Env {
             env: env,
             cb: Default::default(),
+            logfile: ptr::null_mut(),
             dispose: false,
         }
     }
