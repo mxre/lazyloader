@@ -259,24 +259,24 @@ pub type CPXCNT = int64_t;
 #[cfg(target_pointer_width = "64")]
 pub type CPXDIM = c_int;
 
-pub type CPXCutCallback = extern "C" fn(env: *const CPXenv,
+pub type CPXCutCallback = extern "C" fn(env: *mut CPXenv,
                                         cbdata: *mut c_void,
                                         wherefrom: c_int,
                                         cbhandle: *mut c_void,
                                         useraction_p: *mut c_int)
                                         -> c_int;
 
-pub type CPXIncumbentCallback = extern "C" fn(env: *const CPXenv,
+pub type CPXIncumbentCallback = extern "C" fn(env: *mut CPXenv,
                                               cbdata: *mut c_void,
                                               wherefrom: c_int,
                                               cbhandle: *mut c_void,
                                               objval: c_double,
-                                              x: *const c_double,
+                                              x: *mut c_double,
                                               isfeas_p: *mut c_int,
                                               useraction_p: *mut c_int)
                                               -> c_int;
 
-pub type CPXHeuristicCallback = extern "C" fn(env: *const CPXenv,
+pub type CPXHeuristicCallback = extern "C" fn(env: *mut CPXenv,
                                               cbdata: *mut c_void,
                                               wherefrom: c_int,
                                               cbhandle: *mut c_void,
@@ -423,7 +423,7 @@ extern "C" {
     pub fn CPXLgetcallbacklp(env: *const CPXenv,
                              cbdata: *mut c_void,
                              wherefrom: c_int,
-                             lp: *const CPXlp)
+                             lp: &*mut CPXlp)
                              -> c_int;
 
     pub fn CPXLsetusercutcallbackfunc(env: *mut CPXenv,

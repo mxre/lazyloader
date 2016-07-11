@@ -3,8 +3,11 @@
 extern crate libc;
 use self::libc::c_void;
 
+use std::ptr;
+
 use cplex_sys::*;
-use env::CallbackPrivate;
+use env::{CallbackPrivate, PrivateEnv, Env};
+use cplex::{Problem, PrivateProblem};
 use error::{Error, PrivateErrorConstructor};
 use model::{Expr, Sense};
 
@@ -26,7 +29,7 @@ pub enum Action {
 
 /// Interface to CPLEX inside a callback
 pub struct Callback {
-    env: *const CPXenv,
+    env: *mut CPXenv,
     cbdata: *mut c_void,
     wherefrom: i32,
 }
@@ -59,10 +62,20 @@ impl Callback {
                   val.as_ptr(),
                   purgeable as i32)
     }
+
+    pub fn get_environment(&self) -> Env {
+        Env::from_cpx(self.env)
+    }
+
+    pub fn get_problem(&self) -> Problem {
+        let mut lp: *mut CPXlp = ptr::null_mut();
+        cpx_safe!(CPXLgetcallbacklp, self.env, self.cbdata, self.wherefrom, &mut lp);
+        Problem::from_cpx(self.env, lp)
+    }
 }
 
 impl CallbackPrivate for Callback {
-    fn from_cpx(env: *const CPXenv, cbdata: *mut c_void, wherefrom: i32) -> Callback {
+    fn from_cpx(env: *mut CPXenv, cbdata: *mut c_void, wherefrom: i32) -> Callback {
         Callback {
             env: env,
             cbdata: cbdata,

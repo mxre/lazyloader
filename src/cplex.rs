@@ -14,8 +14,9 @@ use model;
 
 /// LP problem and solver
 pub struct Problem {
-    env: *const CPXenv,
+    env: *mut CPXenv,
     lp: *mut CPXlp,
+    dispose: bool,
 }
 
 pub trait ExtractableModel {
@@ -36,6 +37,7 @@ impl Problem {
                 Ok(Problem {
                     env: e.get_env(),
                     lp: lp,
+                    dispose: true,
                 })
             }
             _ => Err(Error::new(e.get_env(), status)),
@@ -97,9 +99,11 @@ impl Problem {
 
 impl Drop for Problem {
     fn drop(&mut self) {
-        match cpx_safe!(CPXLfreeprob, self.env, &mut &self.lp) {
-            0 => (),
-            s => println!("{}", Error::new(self.env, s).description()),
+        if self.dispose {
+            match cpx_safe!(CPXLfreeprob, self.env, &mut &self.lp) {
+                0 => (),
+                s => println!("{}", Error::new(self.env, s).description()),
+            }
         }
     }
 }
@@ -207,11 +211,17 @@ impl Raw for Problem {
 
 /// Access raw CPLEX handles
 pub trait PrivateProblem {
+    /// Get the pointer to the problem
     #[inline]
     fn get_lp(&self) -> *mut CPXlp;
 
+    /// Get the pointer to the environment
     #[inline]
-    fn get_env(&self) -> *const CPXenv;
+    fn get_env(&self) -> *mut CPXenv;
+
+    /// Create a new cplex problem object from an existing problem
+    #[inline]
+    fn from_cpx(env: *mut CPXenv, lp: *mut CPXlp) -> Problem;
 }
 
 impl PrivateProblem for Problem {
@@ -219,7 +229,15 @@ impl PrivateProblem for Problem {
         self.lp
     }
 
-    fn get_env(&self) -> *const CPXenv {
+    fn get_env(&self) -> *mut CPXenv {
         self.env
+    }
+
+    fn from_cpx(env: *mut CPXenv, lp: *mut CPXlp) -> Problem {
+        Problem {
+            env: env,
+            lp: lp,
+            dispose: false,
+        }
     }
 }
