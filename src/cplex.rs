@@ -3,10 +3,9 @@ use std::path::Path;
 use std::ffi::CString;
 use std::ptr;
 
-extern crate libc;
-use self::libc::{c_int, c_char};
-
+use libc::{c_int, c_char};
 use cplex_sys::*;
+
 use error::{Error, PrivateErrorConstructor};
 use env;
 use env::PrivateEnv;

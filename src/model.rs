@@ -37,12 +37,11 @@ use std::ptr;
 use std::num::FpCategory;
 use std::convert::AsRef;
 
-extern crate libc;
-use self::libc::c_char;
+use libc::c_char;
+use cplex_sys::*;
 
 use cplex::{Problem, ExtractableModel, PrivateProblem};
 use error::{Error, PrivateErrorConstructor};
-use cplex_sys::*;
 
 /// Types of objectives
 #[derive(Clone, Hash, Copy)]

@@ -1,9 +1,7 @@
 //! CPLEX Callable C-Library
 
-#![allow(dead_code)]
-
 extern crate libc;
-use self::libc::{c_char, c_int, c_double, int64_t, c_void};
+use libc::{c_char, c_int, c_double, int64_t, c_void};
 
 /// CPLEX environement instance
 pub enum CPXenv {}
@@ -16,7 +14,7 @@ pub enum CPXfile {}
 
 pub mod constants {
     extern crate libc;
-    use self::libc::{c_int, c_double};
+    use libc::{c_int, c_double};
 
     /// Lenght of a message buffer
     pub const CPXMESSAGEBUFSIZE: usize = 1024;

@@ -1,3 +1,7 @@
+//! Find the CPLEX library and set the correct paths
+//! If it is a dynamic linked library, then copy it to then
+//! output directoy, next to the resulting binary.
+
 extern crate glob;
 use glob::glob;
 

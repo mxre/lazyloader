@@ -1,11 +1,17 @@
 [package]
-name = "cplex"
-version = "0.1.1"
+name = "cplex_sys"
+version = "12.6.2"
 authors = ["Max Resch <max.resch@student.tuwien.ac.at>"]
+build= "build.rs"
 
 [dependencies]
-cplex_sys = { path = "./cplex_sys" }
 libc = "0.2.13"
+
+[lib]
+path = "lib.rs"
+
+[build-dependencies]
+glob = "0.2.11"
 
 [profile.release]
 opt-level = 3
@@ -19,6 +25,4 @@ lto = false
 debug-assertions = true
 
 [features]
-cpx_call_log = []
-cpx_static = [ "cplex_sys/cpx_static" ]
-cpx_expose = []
+cpx_static = []

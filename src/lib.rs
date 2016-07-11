@@ -1,17 +1,16 @@
 //! CPLEX Rust adapter crate
 
+extern crate libc;
+extern crate cplex_sys;
+
 #[macro_use]
 mod macros;
 
-#[cfg(feature = "cpx_expose")]
-pub mod cplex_sys;
 #[cfg(feature = "cpx_expose")]
 pub mod env;
 #[cfg(feature = "cpx_expose")]
 pub mod cplex;
 
-#[cfg(not(feature = "cpx_expose"))]
-mod cplex_sys;
 #[cfg(not(feature = "cpx_expose"))]
 mod env;
 #[cfg(not(feature = "cpx_expose"))]

@@ -16,12 +16,11 @@
 //! }).unwrap();
 //! ```
 
-extern crate libc;
-use self::libc::c_void;
+use libc::c_void;
+use cplex_sys::*;
 
 use std::ptr;
 
-use cplex_sys::*;
 use env::{CallbackPrivate, PrivateEnv, Env};
 use cplex::{Problem, PrivateProblem};
 use error::{Error, PrivateErrorConstructor};

@@ -5,10 +5,9 @@ use std::ffi::{CStr, CString};
 use std::ops::FnMut;
 use std::marker::Send;
 
-extern crate libc;
-use self::libc::{c_int, c_void, c_double};
-
+use libc::{c_int, c_void, c_double};
 use cplex_sys::*;
+
 use error::{Error, PrivateErrorConstructor};
 use cplex::Raw;
 use callback::*;
