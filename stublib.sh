@@ -83,7 +83,11 @@ echo "#include <stdio.h>
 #include <windows.h>
 #else
 #include <dlfcn.h>
-#endif"
+#endif
+
+// for windows create static symbols
+#define BUILD_CPXSTATIC 1
+"
 if [ x"$declared_header" != x ]; then
     echo "#include \"$declared_header\""
 else
@@ -93,11 +97,17 @@ if [ x"$register_callback" != x ]; then
     echo "#include <lazyloader.h>"
 fi
 echo "
+// remove for windows some of the macros
+#undef CPXPUBLIC
+#define CPXPUBLIC
+#undef CPXPUBVARARGS
+#define CPXPUBVARARGS
+
 /* Debugging macros */
-#define PRINT_DEBUG(fmt, args ...) if (is_debug_enabled()) { \\
-    fprintf( stderr, \"\\n(%s): \" fmt, __FUNCTION__, ## args ); }
-#define PRINT_ERR(fmt, args ...) \\
-    fprintf( stderr, \"\\n(%s): \" fmt, __FUNCTION__, ## args );
+#define PRINT_DEBUG(fmt, ...) if (is_debug_enabled()) { \\
+    fprintf( stderr, \"\\n(%s): \" fmt, __FUNCTION__, __VA_ARGS__ ); }
+#define PRINT_ERR(fmt, ...) \\
+    fprintf( stderr, \"\\n(%s): \" fmt, __FUNCTION__, __VA_ARGS__ );
 
 static bool is_debug_enabled();
 static void default_failure_callback(const char* symbol, void* cb_data);
@@ -177,7 +187,7 @@ echo "    if (library)
     }
 }
 
-static inline void* load_symbol(const char *name){
+static __inline void* load_symbol(const char *name){
     void* symbol = NULL;
 #ifdef _WIN32
     if (!handle || !(symbol = GetProcAddress(handle, name))) {
