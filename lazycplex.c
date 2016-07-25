@@ -21,10 +21,17 @@
 #define CPXPUBVARARGS
 
 /* Debugging macros */
-#define PRINT_DEBUG(fmt, ...) if (is_debug_enabled()) { \
+#ifdef _MSC_VER
+#define PRINT_DEBUG(fmt, ...) if (debug_enabled) { \
     fprintf( stderr, "\n(%s): " fmt, __FUNCTION__, __VA_ARGS__ ); }
 #define PRINT_ERR(fmt, ...) \
     fprintf( stderr, "\n(%s): " fmt, __FUNCTION__, __VA_ARGS__ );
+#else
+#define PRINT_DEBUG(fmt, args ...) if (debug_enabled) { \
+    fprintf( stderr, "\n(%s): " fmt, __FUNCTION__, ## args ); }
+#define PRINT_ERR(fmt, args ...) \
+    fprintf( stderr, "\n(%s): " fmt, __FUNCTION__, ## args );
+#endif
 
 static bool is_debug_enabled();
 static void default_failure_callback(const char* symbol, void* cb_data);
@@ -39,11 +46,6 @@ static void (*failure_callback)(const char* symbol, void* cb_data) = default_fai
 static void* callback_data = NULL;
 
 static bool debug_enabled = false;
-
-/* True if the environment variable LAZYCPLEX_DEBUG is non empty */
-bool is_debug_enabled() {
-    return debug_enabled;
-}
 
 /* Prints the failing symbol and aborts */
 void default_failure_callback(const char* symbol, void* cb_data){
