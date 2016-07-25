@@ -53,6 +53,14 @@ void default_failure_callback(const char* symbol, void* cb_data){
     abort();
 }
 
+static void exit_lazy_loader() {
+#ifdef _WIN32
+    FreeLibrary(handle);
+#else
+    dlclose(handle);
+#endif
+}
+
 /* Searches and loads the actual library */
 void initialize_lazy_loader(const char* library) {
     const char *dbg = getenv("LAZYCPLEX_DEBUG");
@@ -110,6 +118,8 @@ void initialize_lazy_loader(const char* library) {
     } else {
         PRINT_DEBUG("Success!\n");
     }
+
+    atexit(exit_lazy_loader);
 }
 
 static __inline void* load_symbol(const char *name){
