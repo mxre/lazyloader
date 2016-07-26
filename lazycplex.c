@@ -54,27 +54,51 @@ void default_failure_callback(const char* symbol, void* cb_data){
 }
 
 static void exit_lazy_loader() {
+    if (handle != NULL)
 #ifdef _WIN32
-    FreeLibrary(handle);
+        FreeLibrary(handle);
 #else
-    dlclose(handle);
+        dlclose(handle);
 #endif
 }
 
-/* Searches and loads the actual library */
-void initialize_lazy_loader(const char* library) {
+int try_lazy_load(const char* library) {
     const char *dbg = getenv("LAZYCPLEX_DEBUG");
     debug_enabled = (dbg != NULL && strlen(dbg) > 0);
 
     if (handle != NULL) {
         PRINT_DEBUG("The library is already initialized.\n");
-        return;
+        return 0;
     }
+    
+    PRINT_DEBUG("Trying to load %s...\n", library);
+#ifdef _WIN32
+    handle = LoadLibrary(library);
+#else
+    handle = dlopen(library, RTLD_LAZY);
+#endif
+    if (handle == NULL)
+        return 1;
+    else {
+        PRINT_DEBUG("Success!\n");
+        return 0;
+    }
+}
+
+/* Searches and loads the actual library */
+int initialize_lazy_loader() {
+    const char *dbg = getenv("LAZYCPLEX_DEBUG");
+    debug_enabled = (dbg != NULL && strlen(dbg) > 0);
+
+    if (handle != NULL) {
+        PRINT_DEBUG("The library is already initialized.\n");
+        return 0;
+    }
+
     int i;
-    char* s = getenv("LAZYLOAD_CPLEX");
+    char* s = getenv("LAZYLOAD_CPLEX_DLL");
     const char* libnames[] = {
         ""
-        "",
         "",
 #ifdef _WIN32
         "cplex1263.dll",
@@ -94,32 +118,27 @@ void initialize_lazy_loader(const char* library) {
         "libcplex123.so",
 #endif
         NULL };
-    if (s)
-        libnames[1] = s;
-    if (library)
-        libnames[2] = library;
+    if (s != NULL)
+        libnames[0] = s;
+
     PRINT_DEBUG("Looking for a suitable library.\n");
     for (i = 0; libnames[i] != NULL; i++){
-        if (handle != NULL) {
-            break;
-        }
         if (strlen(libnames[i]) == 0) {
             continue;
         }
-        PRINT_DEBUG("Trying to load %s...\n", libnames[i]);
-#ifdef _WIN32
-        handle = LoadLibrary(libnames[i]);
-#else
-        handle = dlopen(libnames[i], RTLD_LAZY);
-#endif
-    }
-    if (handle == NULL) {
-        PRINT_DEBUG("Library lookup failed! Suggest setting a library path manually.\n")
-    } else {
-        PRINT_DEBUG("Success!\n");
+        if (try_lazy_load(libnames[i]) == 0) {
+            break;
+        }
     }
 
     atexit(exit_lazy_loader);
+
+    if (handle == NULL) {
+        PRINT_DEBUG("Library lookup failed! Suggest setting a library path manually.\n")
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 static __inline void* load_symbol(const char *name){

@@ -7,7 +7,9 @@ CPLEX_PATH=/opt/ibm/ILOG/CPLEX_Studio126/cplex
 	./filter_header.sh $< > $@
 
 lazycplex.c: cplexl.h stublib.sh
-	./stublib.sh -i cplexl.h -l cplex1263,cplex1262,cplex1261,cplex1260,cplex125,cplex124,cplex123 -e LAZYLOAD_CPLEX -r > $@
+	./stublib.sh -i cplexl.h \
+		-l cplex1263,cplex1262,cplex1261,cplex1260,cplex125,cplex124,cplex123 \
+		-e LAZYLOAD_CPLEX_DLL -r > $@
 
 lazycplex.o: lazycplex.c
 	gcc -c $< -o $@ -O3 -fPIC -I. -Wall
