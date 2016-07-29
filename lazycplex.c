@@ -10,6 +10,10 @@
 
 // for windows create static symbols
 #define BUILD_CPXSTATIC 1
+// for GCC
+#ifdef _WIN64 
+#define _LP64 1
+#endif
 
 #include "cplexl.h"
 #include <lazyloader.h>

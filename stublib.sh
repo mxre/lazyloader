@@ -87,6 +87,10 @@ echo "#include <stdio.h>
 
 // for windows create static symbols
 #define BUILD_CPXSTATIC 1
+// for GCC
+#ifdef _WIN64 
+#define _LP64 1
+#endif
 "
 if [ x"$declared_header" != x ]; then
     echo "#include \"$declared_header\""
