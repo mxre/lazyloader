@@ -100,7 +100,7 @@ fi
 if [ x"$register_callback" != x ]; then
     echo "#include <lazyloader.h>"
 fi
-echo "
+cat <<_EOF_
 // remove for windows some of the macros
 #undef CPXPUBLIC
 #define CPXPUBLIC
@@ -109,15 +109,15 @@ echo "
 
 /* Debugging macros */
 #ifdef _MSC_VER
-#define PRINT_DEBUG(fmt, ...) if (debug_enabled) { \\
-    fprintf( stderr, \"\\n(%s): \" fmt, __FUNCTION__, __VA_ARGS__ ); }
-#define PRINT_ERR(fmt, ...) \\
-    fprintf( stderr, \"\\n(%s): \" fmt, __FUNCTION__, __VA_ARGS__ );
+#define PRINT_DEBUG(fmt, ...) if (debug_enabled) { \
+    fprintf( stderr, "\n(%s): " fmt, __FUNCTION__, __VA_ARGS__ ); }
+#define PRINT_ERR(fmt, ...) \
+    fprintf( stderr, "\n(%s): " fmt, __FUNCTION__, __VA_ARGS__ );
 #else
-#define PRINT_DEBUG(fmt, args ...) if (debug_enabled) { \\
-    fprintf( stderr, \"\\n(%s): \" fmt, __FUNCTION__, ## args ); }
-#define PRINT_ERR(fmt, args ...) \\
-    fprintf( stderr, \"\\n(%s): \" fmt, __FUNCTION__, ## args );
+#define PRINT_DEBUG(fmt, args ...) if (debug_enabled) { \
+    fprintf( stderr, "\n(%s): " fmt, __FUNCTION__, ## args ); }
+#define PRINT_ERR(fmt, args ...) \
+    fprintf( stderr, "\n(%s): " fmt, __FUNCTION__, ## args );
 #endif
 
 static void default_failure_callback(const char* symbol, void* cb_data);
@@ -135,7 +135,7 @@ static bool debug_enabled = false;
 
 /* Prints the failing symbol and aborts */
 void default_failure_callback(const char* symbol, void* cb_data){
-    PRINT_ERR (\"the symbol %s could not be found!\\n\", symbol);
+    PRINT_ERR ("the symbol %s could not be found!\n", symbol);
     abort();
 }
 
@@ -166,9 +166,9 @@ int test_library(int min_version) {
         return 1;
     }
     void* symbol = NULL;
-    symbol = SYMBOL(\"CPXopenCPLEX\");
+    symbol = SYMBOL("CPXopenCPLEX");
     if (symbol == NULL) {
-        PRINT_DEBUG(\"Library is missing CPXopenCPLEX\\n\");
+        PRINT_DEBUG("Library is missing CPXopenCPLEX\n");
         FREE;
         handle = NULL;
         return 2;
@@ -176,37 +176,57 @@ int test_library(int min_version) {
     int status = 0;
     void* env = ((void* (*) (int*)) (symbol)) (&status);
     if (env == NULL || status != 0) {
-        PRINT_DEBUG(\"Could not open a CPLEX environment\\nCPLEX error: %d\\n\", status);
+        PRINT_DEBUG("Could not open a CPLEX environment\nCPLEX error: %d\n", status);
         FREE;
         handle = NULL;
         return 3;
     }
-    symbol = SYMBOL(\"CPXversionnumber\");
-    if (symbol == NULL) {
-        PRINT_DEBUG(\"Library is missing CPXversionnumber\\n\");
-        FREE;
-        handle = NULL;
-        return 2;
-    }
+    symbol = SYMBOL("CPXversionnumber");
     int ret = 0;
     int version = 0;
-    status = ((int (*) (void*, int*)) (symbol)) (env, &version);
-    if (status != 0) {
-        PRINT_DEBUG(\"Could not retrieve a version from the library\\nCPLEX error: %d\\n\", status);
-        ret = 3;
-    }
-    PRINT_DEBUG(\"Loaded CPLEX library version: %d.%d.%d.%d\\n\",
-                (version / 1000000)      ,
-                (version / 10000  ) % 100,
-                (version / 100    ) % 100,
-                (version          ) % 100);
-    if (version < min_version) {
-        PRINT_DEBUG(\"Library version marked as too old\\n\");
-        ret = 4;
-    }
-    symbol = SYMBOL(\"CPXcloseCPLEX\");
     if (symbol == NULL) {
-        PRINT_DEBUG(\"Library is missing CPXcloseCPLEX\\n\");
+        PRINT_DEBUG("Library is missing CPXversionnumber, fallback\n");
+        symbol = SYMBOL("CPXversion");
+        if (symbol == NULL) {
+            PRINT_DEBUG("Library is missing CPXversion\n");
+            FREE;
+            handle = NULL;
+            return 2;
+        }
+        const char* verstring =
+        ((const char* (*) (void*)) (symbol)) (env);
+        if (verstring == NULL) {
+            PRINT_DEBUG("Could not retrieve a version from the library\n");
+            ret = 3;
+        }
+        int major, minor, micro, patch;
+        if (sscanf(verstring, "%d.%d.%d.%d", &major, &minor, &micro, &patch) != 4) {
+            PRINT_DEBUG("Could not retrieve a version from the library\nCPLEX error: %d\n", status);
+            ret = 3;
+        } else {
+            version = major * 1000000 + minor * 10000 + micro * 100 + patch;
+        }
+    } else {
+        status = ((int (*) (void*, int*)) (symbol)) (env, &version);
+        if (status != 0) {
+            PRINT_DEBUG("Could not retrieve a version from the library\nCPLEX error: %d\n", status);
+            ret = 3;
+        }
+    }
+    if (ret == 0) {
+        PRINT_DEBUG("Loaded CPLEX library version: %d.%d.%d.%d\n",
+                    (version / 1000000)      ,
+                    (version / 10000  ) % 100,
+                    (version / 100    ) % 100,
+                    (version          ) % 100);
+        if (version < min_version) {
+            PRINT_DEBUG("Library version marked as too old\n");
+            ret = 4;
+        }
+    }
+    symbol = SYMBOL("CPXcloseCPLEX");
+    if (symbol == NULL) {
+        PRINT_DEBUG("Library is missing CPXcloseCPLEX\n");
         FREE;
         handle = NULL;
         return 2;
@@ -220,15 +240,15 @@ int test_library(int min_version) {
 }
 
 int try_lazy_load(const char* library, int min_version) {
-    const char *dbg = getenv(\"LAZYCPLEX_DEBUG\");
+    const char *dbg = getenv("LAZYCPLEX_DEBUG");
     debug_enabled = (dbg != NULL && strlen(dbg) > 0);
 
     if (handle != NULL) {
-        PRINT_DEBUG(\"The library is already initialized.\\n\");
+        PRINT_DEBUG("The library is already initialized.\n");
         return 0;
     }
 
-    PRINT_DEBUG(\"Trying to load %s...\\n\", library);
+    PRINT_DEBUG("Trying to load %s\n", library);
 #ifdef _WIN32
     handle = LoadLibrary(library);
 #else
@@ -239,13 +259,14 @@ int try_lazy_load(const char* library, int min_version) {
     else {
         int ret = test_library(min_version);
         if (ret == 0) {
-            PRINT_DEBUG(\"Success!\\n\");
+            PRINT_DEBUG("Success!\n");
             atexit(exit_lazy_loader);
         }
         return ret;
     }
 }
-
+_EOF_
+echo "
 /* Searches and loads the actual library */
 int initialize_lazy_loader(int min_version) {
     const char *dbg = getenv(\"LAZYCPLEX_DEBUG\");
