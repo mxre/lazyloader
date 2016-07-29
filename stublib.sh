@@ -120,7 +120,6 @@ echo "
     fprintf( stderr, \"\\n(%s): \" fmt, __FUNCTION__, ## args );
 #endif
 
-static bool is_debug_enabled();
 static void default_failure_callback(const char* symbol, void* cb_data);
 static void* load_symbol(const char* name);
 
@@ -147,9 +146,80 @@ static void exit_lazy_loader() {
 #else
         dlclose(handle);
 #endif
+        handle = NULL;
 }
 
-int try_lazy_load(const char* library) {
+#ifdef _WIN32
+#define SYMBOL(sym) GetProcAddress(handle, sym)
+#else
+#define SYMBOL(sym) dlsym(handle, sym)
+#endif
+
+#ifdef _WIN32
+#define FREE FreeLibrary(handle)
+#else
+#define FREE dlclose(handle)
+#endif
+
+int test_library(int min_version) {
+    if (handle == NULL) {
+        return 1;
+    }
+    void* symbol = NULL;
+    symbol = SYMBOL(\"CPXopenCPLEX\");
+    if (symbol == NULL) {
+        PRINT_DEBUG(\"Library is missing CPXopenCPLEX\\n\");
+        FREE;
+        handle = NULL;
+        return 2;
+    }
+    int status = 0;
+    void* env = ((void* (*) (int*)) (symbol)) (&status);
+    if (env == NULL || status != 0) {
+        PRINT_DEBUG(\"Could not open a CPLEX environment\\nCPLEX error: %d\\n\", status);
+        FREE;
+        handle = NULL;
+        return 3;
+    }
+    symbol = SYMBOL(\"CPXversionnumber\");
+    if (symbol == NULL) {
+        PRINT_DEBUG(\"Library is missing CPXversionnumber\\n\");
+        FREE;
+        handle = NULL;
+        return 2;
+    }
+    int ret = 0;
+    int version = 0;
+    status = ((int (*) (void*, int*)) (symbol)) (env, &version);
+    if (status != 0) {
+        PRINT_DEBUG(\"Could not retrieve a version from the library\\nCPLEX error: %d\\n\", status);
+        ret = 3;
+    }
+    PRINT_DEBUG(\"Loaded CPLEX library version: %d.%d.%d.%d\\n\",
+                (version / 1000000)      ,
+                (version / 10000  ) % 100,
+                (version / 100    ) % 100,
+                (version          ) % 100);
+    if (version < min_version) {
+        PRINT_DEBUG(\"Library version marked as too old\\n\");
+        ret = 4;
+    }
+    symbol = SYMBOL(\"CPXcloseCPLEX\");
+    if (symbol == NULL) {
+        PRINT_DEBUG(\"Library is missing CPXcloseCPLEX\\n\");
+        FREE;
+        handle = NULL;
+        return 2;
+    }
+    ((int (*) (void**)) (symbol)) (&env);
+    if (ret != 0) {
+        FREE;
+        handle = NULL;
+    }
+    return ret;
+}
+
+int try_lazy_load(const char* library, int min_version) {
     const char *dbg = getenv(\"LAZYCPLEX_DEBUG\");
     debug_enabled = (dbg != NULL && strlen(dbg) > 0);
 
@@ -157,7 +227,7 @@ int try_lazy_load(const char* library) {
         PRINT_DEBUG(\"The library is already initialized.\\n\");
         return 0;
     }
-    
+
     PRINT_DEBUG(\"Trying to load %s...\\n\", library);
 #ifdef _WIN32
     handle = LoadLibrary(library);
@@ -167,13 +237,17 @@ int try_lazy_load(const char* library) {
     if (handle == NULL)
         return 1;
     else {
-        PRINT_DEBUG(\"Success!\\n\");
-        return 0;
+        int ret = test_library(min_version);
+        if (ret == 0) {
+            PRINT_DEBUG(\"Success!\\n\");
+            atexit(exit_lazy_loader);
+        }
+        return ret;
     }
 }
 
 /* Searches and loads the actual library */
-int initialize_lazy_loader() {
+int initialize_lazy_loader(int min_version) {
     const char *dbg = getenv(\"LAZYCPLEX_DEBUG\");
     debug_enabled = (dbg != NULL && strlen(dbg) > 0);
 
@@ -207,12 +281,10 @@ echo "
         if (strlen(libnames[i]) == 0) {
             continue;
         }
-        if (try_lazy_load(libnames[i]) == 0) {
+        if (try_lazy_load(libnames[i], min_version) == 0) {
             break;
         }
     }
-
-    atexit(exit_lazy_loader);
 
     if (handle == NULL) {
         PRINT_DEBUG(\"Library lookup failed! Suggest setting a library path manually.\\n\")

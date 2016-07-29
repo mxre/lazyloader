@@ -29,7 +29,7 @@ echo "
  */
  " >> $tmp
 gcc -fpreprocessed -dD -E $1 |\
-    sed '/^$/d' |\
+    sed '/^$/d;/CPXDEPRECATEDAPI *([0-9]\+)/d' |\
     grep -v '^#\s\+[0-9]\+\s\+".*"' |\
     head -n-1 |\
     tail -n+3 >> $tmp
