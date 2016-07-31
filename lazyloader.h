@@ -9,3 +9,7 @@ int initialize_lazy_loader(int min_version);
 int try_lazy_load(const char* library, int min_version);
 
 void set_lazyloader_error_callback(void (*f)(const char *err, void* cb_data), void* cb_data);
+
+void* get_lazy_handle();
+
+void set_lazy_handle(void* handle);

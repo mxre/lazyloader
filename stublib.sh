@@ -139,6 +139,14 @@ void default_failure_callback(const char* symbol, void* cb_data){
     abort();
 }
 
+void* get_lazy_handle() {
+	return handle;
+}
+
+void set_lazy_handle(void* handle) {
+	handle = handle;
+}
+
 static void exit_lazy_loader() {
     if (handle != NULL)
 #ifdef _WIN32
