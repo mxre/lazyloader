@@ -370,7 +370,7 @@ if __name__ == "__main__":
         usage()
         sys.exit(1)
 
-    w = open(outfile, "w")
+    w = open(outfile, "w", encoding='utf_8', newline='\n')
     write_loader_prelude(w, include, libnames, env)
     with open(include) as header:
         f = header.read()
