@@ -7,8 +7,9 @@
 #else
 #include <dlfcn.h>
 #endif
+#include "lazyloader.h"
 #define DEBUG_ENVIRONMENT_VARIABLE "LAZYCPLEX_DEBUG"
-#define LOADER_ENVIRONMENT_VARIABLE "LOAD_CPLEX_DLL"
+#define LOADER_ENVIRONMENT_VARIABLE "LAZYLOAD_CPLEX_DLL"
 
 static int test_library(int min_version);
 
@@ -224,7 +225,7 @@ static __inline void* load_symbol(const char *name)
     if (!handle || !(symbol = SYMBOL(name))) {
         failure_callback(name, callback_data);
     } else {
-        PRINT_DEBUG("successfully imported the symbol %s\n", name, symbol);
+        PRINT_DEBUG("successfully imported the symbol %s\n", name);
     }
     return symbol;
 }
@@ -265,7 +266,6 @@ void default_failure_callback(const char* symbol, void* cb_data)
 #define _LP64 1
 #endif
 #include "cplexx.h"
-#include "lazyloader.h"
 
 // remove for windows some of the macros
 #undef CPXPUBLIC

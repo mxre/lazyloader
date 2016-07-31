@@ -14,10 +14,10 @@ cplex.h: ${CPLEX_PATH}/include/ilcplex/cplex.h filter_header.sh
 cplexx.h: cplex.h cplexl.h
 	cat $^ > $@
 
-lazycplex.c: cplexx.h stublib.sh
-	./stublib.sh -i cplexx.h \
+lazycplex.c: cplexx.h
+	python3 stublib.py -i cplexx.h -o $@ \
 		-l cplex1263,cplex1262,cplex1261,cplex1260,cplex125,cplex124,cplex123 \
-		-e LAZYLOAD_CPLEX_DLL -r > $@
+		-e LAZYLOAD_CPLEX_DLL
 
 lazycplex.o: lazycplex.c cplexx.h cpxconst.h
 	gcc -c $< -o $@ -O3 -fPIC -I. -Wall

@@ -12,6 +12,7 @@ def write_loader_prelude(out, include, libnames, env):
     out.write("#else\n")
     out.write("#include <dlfcn.h>\n")
     out.write("#endif\n")
+    out.write('#include "lazyloader.h"\n')
     out.write('#define DEBUG_ENVIRONMENT_VARIABLE "LAZYCPLEX_DEBUG"\n')
     out.write('#define LOADER_ENVIRONMENT_VARIABLE "{}"\n'.format(env))
     out.write(r'''
@@ -220,7 +221,7 @@ static __inline void* load_symbol(const char *name)
     if (!handle || !(symbol = SYMBOL(name))) {
         failure_callback(name, callback_data);
     } else {
-        PRINT_DEBUG("successfully imported the symbol %s\n", name, symbol);
+        PRINT_DEBUG("successfully imported the symbol %s\n", name);
     }
     return symbol;
 }
@@ -262,7 +263,6 @@ void default_failure_callback(const char* symbol, void* cb_data)
 #endif
 ''')
     out.write('#include "{}"\n'.format(include))
-    out.write('#include "lazyloader.h"\n')
     out.write('''
 // remove for windows some of the macros
 #undef CPXPUBLIC
