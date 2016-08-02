@@ -87,7 +87,7 @@ int initialize_lazy_loader(int min_version) {
         out.write('        "{}.dll",\n'.format(name))
     out.write("#else\n")
     for name in libnames:
-        out.write('        "{}.dll",\n'.format(name))
+        out.write('        "lib{}.so",\n'.format(name))
     out.write(r'''
 #endif
         NULL };

@@ -86,13 +86,13 @@ int initialize_lazy_loader(int min_version) {
         "cplex124.dll",
         "cplex123.dll",
 #else
-        "cplex1263.dll",
-        "cplex1262.dll",
-        "cplex1261.dll",
-        "cplex1260.dll",
-        "cplex125.dll",
-        "cplex124.dll",
-        "cplex123.dll",
+        "libcplex1263.so",
+        "libcplex1262.so",
+        "libcplex1261.so",
+        "libcplex1260.so",
+        "libcplex125.so",
+        "libcplex124.so",
+        "libcplex123.so",
 
 #endif
         NULL };
