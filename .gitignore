@@ -1,0 +1,7 @@
+*.o
+generated/
+objects/
+lib/
+/tags
+example/example
+
