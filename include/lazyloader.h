@@ -1,5 +1,6 @@
 /**
- * This file is part of lazycplex
+ * This file is part of lazycplex.
+ * This is the public header file.
  *
  * Copyright 2016 Max Resch
  *
@@ -38,6 +39,7 @@ int initialize_lazy_loader(int min_version);
 // returns 0 on success
 int try_lazy_load(const char* library, int min_version);
 
+// set error callback
 void set_lazyloader_error_callback(void (*f)(const char *err, void* cb_data), void* cb_data);
 
 // return the internal handle

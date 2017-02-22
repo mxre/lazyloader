@@ -60,7 +60,7 @@ generated/Makefile: generated.mk
 	cp generated.mk generated/Makefile
 
 generate: generated/loader_g.c generated/cplex.c generated/cplexs.c generated/cplexl.c src/loader.h generated/Makefile
-	make -C generated
+	make -j20 -C generated all
 
 lib/libcplex.a: generate
 	make -C generated libcplex.a
