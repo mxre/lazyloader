@@ -1,7 +1,8 @@
 *.o
+*.obj
 generated/
 objects/
 lib/
 /tags
 example/example
-
+example/example.exe
