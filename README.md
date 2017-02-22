@@ -26,6 +26,9 @@ See example/example.c
 * The header file `lazyloader.h` contains functions, that can be used to programmatically
   set the loader library. Note that if automatic loading is enabled, in the library,
   another library can only be loaded, if the automatic loading failed.
+* The stub generator generates a source file for each funtion, this minimizses the size
+  of an executable that is linked with this library since only required object files need to
+  be included.
 
 ## Todo
 * Windows nmake needs a better detection for which object files need to be built.
@@ -38,12 +41,14 @@ See example/example.c
 * For Windows we used Microsoft's Visual C Compiler 19 (Visual Studio 14),
   and Windows SDK 10. As a runtime library we default to using the Universal C Runtime,
   and a statically linked Visual Studio Core Runtime. (thus avoiding the need to provide a
-  Visual Studio Redistributable CRT on a deployment system).
+  Visual Studio Redistributable CRT on a deployment system), cf:
+  - https://blogs.msdn.microsoft.com/vcblog/2015/03/03/introducing-the-universal-crt/
+  - http://stackoverflow.com/questions/35805113/visual-studio-2015-run-time-dependencies-or-how-to-get-rid-of-universal-crt
   Futhermore bash (i.e. from Windows Subsystem for Linux) with gcc and Python3 are required
   to generate the header stubs from a CPLEX installation.
 
 Generated headers and source stubs are identical for Windows and Linux, and can be shared.
-This is especially interresting, as genrerating them under Windows can be somewhat harder than
+This is especially interresting, as generating them under Windows can be somewhat harder than
 under Linux.
 
 ## Acknowledgements
