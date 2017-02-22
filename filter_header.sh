@@ -56,5 +56,5 @@ gcc -w -fpreprocessed -dD -E $1 |\
 echo "" >> $tmp
 echo "#endif /* $gatename */" >> $tmp
 
-cat $tmp
+mv $tmp "$2"
 

@@ -41,7 +41,7 @@ LIBRARY_NAMES=cplex1270,cplex1263,cplex1262,cplex1261,cplex1260,cplex125,cplex12
 
 generated/%.h: $(CPLEX_PATH)/include/ilcplex/%.h filter_header.sh
 	@test -d generated/ || mkdir generated
-	./filter_header.sh $< > $@
+	./filter_header.sh $< $@
 
 generated/cplexx.h: generated/cplex.h generated/cplexl.h generated/cplexs.h
 	cat $^ > $@
