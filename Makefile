@@ -39,59 +39,33 @@ CPLEX_PATH=${CPLEX_DIR}/cplex
 # Possible Library names, to search for at runtime
 LIBRARY_NAMES=cplex1270,cplex1263,cplex1262,cplex1261,cplex1260,cplex125,cplex124,cplex123
 
-generated/cplexl.h: $(CPLEX_PATH)/include/ilcplex/cplexl.h filter_header.sh
-	@test -d generated/ || mkdir generated
-	./filter_header.sh $< > $@
-
-generated/cplexs.h: $(CPLEX_PATH)/include/ilcplex/cplexs.h filter_header.sh
-	@test -d generated/ || mkdir generated
-	./filter_header.sh $< > $@
-
-generated/cpxconst.h: $(CPLEX_PATH)/include/ilcplex/cpxconst.h filter_header.sh
-	@test -d generated/ || mkdir generated
-	./filter_header.sh $< > $@
-
-generated/cplex.h: $(CPLEX_PATH)/include/ilcplex/cplex.h filter_header.sh
+generated/%.h: $(CPLEX_PATH)/include/ilcplex/%.h filter_header.sh
 	@test -d generated/ || mkdir generated
 	./filter_header.sh $< > $@
 
 generated/cplexx.h: generated/cplex.h generated/cplexl.h generated/cplexs.h
 	cat $^ > $@
 
-generated/loader.c: include/lazyloader.h stublib.py
+generated/loader_g.c: include/lazyloader.h stublib.py
 	@test -d generated/ || mkdir generated
 	python3 stublib.py -p -o $@ \
 		-l $(LIBRARY_NAMES) \
-		-e LOAD_CPLEX_DLL
+		-e CPLEX_DLL
 
-generated/cplexl.c: generated/cplexx.h generated/cpxconst.h stublib.py
-	python3 stublib.py -i $< -o $@
+generated/%.c: generated/%.h generated/cpxconst.h stublib.py
+	python3 stublib.py -i $< -o $(@D)
+	@touch $@
 
-generated/cplexs.c: generated/cplexx.h generated/cpxconst.h stublib.py
-	python3 stublib.py -i $< -o $@
+generated/Makefile: generated.mk
+	cp generated.mk generated/Makefile
 
-generated/cplex.c: generated/cplex.h generated/cpxconst.h stublib.py
-	python3 stublib.py -i $< -o $@
+generate: generated/loader_g.c generated/cplex.c generated/cplexs.c generated/cplexl.c src/loader.h generated/Makefile
+	make -C generated
 
-objects/cplexs.o: generated/cplexs.c
-	@test -d objects/ || mkdir objects
-	gcc -Iinclude/ -I. -c $< -o $@ -O3 -fPIC
-
-objects/cplexl.o: generated/cplexl.c
-	@test -d objects/ || mkdir objects
-	gcc -Iinclude/ -I. -c $< -o $@ -O3 -fPIC
-
-objects/cplex.o: generated/cplex.c
-	@test -d objects/ || mkdir objects
-	gcc -Iinclude/ -I. -c $< -o $@ -O3 -fPIC
-
-objects/loader.o: generated/loader.c
-	@test -d objects/ || mkdir objects
-	gcc -Iinclude/ -I. -c $< -o $@ -O3 -fPIC
-
-lib/libcplex.a: objects/loader.o objects/cplex.o objects/cplexl.o objects/cplexs.o
+lib/libcplex.a: generate
+	make -C generated libcplex.a
 	@test -d lib/ || mkdir lib
-	ar rcs $@ $^
+	mv generated/libcplex.a $@
 
 clean:
-	rm -fr lib/ objects/ generated/
+	rm -fr lib/ generated/

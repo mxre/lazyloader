@@ -13,4 +13,5 @@ example: example.o
 	$(CC) $< $(LIBS) -o $@
 
 clean:
-	rm -f example
+	rm -f example example.o
+
