@@ -12,5 +12,5 @@ See example/example.c
 ## Notes
 This project is somewhat similar to
 https://github.com/chmduquesne/lazylpsolverlibs
-but, we use a faster generator (writting in Python) and support for the
-modern CPLEX API.
+but, we use a faster generator (written in Python) and support for the
+modern CPLEX API (as defined in cplexx.h).
