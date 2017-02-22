@@ -77,6 +77,12 @@ int initialize_lazy_loader(int min_version) {
     }
 
     if (handle == NULL) {
+        if (try_detect_library(min_version) == 0) {
+            return 0;
+        }
+    }
+
+    if (handle == NULL) {
         PRINT_DEBUG("Library lookup failed! Suggest setting a library path manually.\n")
         return 1;
     } else {

@@ -16,9 +16,10 @@ if errorlevel 1 (
 	goto end
 )
 
-set LIB=%UniversalCRTSdkDir%lib\%UCRTVersion%\ucrt\x64;%UniversalCRTSdkDir%lib\%UCRTVersion%\um\x64;%VSINSTALLDIR%VC\lib\amd64;
-set LIBPATH=%VSINSTALLDIR%VC\lib\amd64;
-set INCLUDE=%UniversalCRTSdkDir%Include\%UCRTVersion%\ucrt;%UniversalCRTSdkDir%Include\%UCRTVersion%\um;%UniversalCRTSdkDir%Include\%UCRTVersion%\shared;%VSINSTALLDIR%VC\include;
+set "PATH=%VSINSTALLDIR%VC\bin\amd64;%UniversalCRTSdkDir%\bin\x64;%PATH%"
+set "LIB=%UniversalCRTSdkDir%lib\%UCRTVersion%\ucrt\x64;%UniversalCRTSdkDir%lib\%UCRTVersion%\um\x64;%VSINSTALLDIR%VC\lib\amd64"
+set "LIBPATH=%VSINSTALLDIR%VC\lib\amd64"
+set "INCLUDE=%UniversalCRTSdkDir%Include\%UCRTVersion%\ucrt;%UniversalCRTSdkDir%Include\%UCRTVersion%\um;%UniversalCRTSdkDir%Include\%UCRTVersion%\shared;%VSINSTALLDIR%VC\include"
 
 nmake /fnmake.mk %1%
 if errorlevel 1 goto end

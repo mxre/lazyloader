@@ -38,9 +38,12 @@
 #include <windows.h>
 #else
 #include <dlfcn.h>
+#include <glob.h>
 #endif
 #include "loader.h"
 #include "lazyloader.h"
+
+#define DEFAULT_INSTALL_PATH_UNIX "/opt/ibm/ILOG/CPLEX_Studio{???,????}/cplex/bin/*/libcplex{???,????}.so"
 
 static int test_library(int min_version);
 
@@ -91,7 +94,6 @@ static void* handle = NULL;
 
 static bool debug_enabled = false;
 
-
 int try_lazy_load(const char* library, int min_version)
 {
     const char *dbg = getenv(DEBUG_ENVIRONMENT_VARIABLE);
@@ -102,11 +104,12 @@ int try_lazy_load(const char* library, int min_version)
         return 0;
     }
 
-    PRINT_DEBUG("Trying to load %s\n", library);
+    PRINT_DEBUG("Trying to load %s", library);
     handle = OPEN(library);
-    if (handle == NULL)
+    if (handle == NULL) {
+        //PRINT_DEBUG("Failed.\n");
         return 1;
-    else {
+    } else {
         int ret = test_library(min_version);
         if (ret == 0) {
             PRINT_DEBUG("Success!\n");
@@ -195,6 +198,65 @@ int test_library(int min_version)
     return ret;
 }
 
+int try_detect_library(int min_version)
+{
+#ifdef _WIN32
+    char* prgm = getenv("PROGRAMFILES");
+    if (NULL == prgm) {
+        PRINT_ERR("Could not retrieve %%PROGRAMFILES%% from environment.\n");
+        return 1;
+    }
+
+    char path[MAX_PATH];
+    strcpy(path, prgm);
+    strcat(path, "\\IBM\\ILOG\\CPLEX_Studio*");
+    WIN32_FIND_DATA ffd;
+    HANDLE find = INVALID_HANDLE_VALUE;
+
+     find = FindFirstFileEx(path, FindExInfoBasic, &ffd, FindExSearchNameMatch, NULL, 0);
+    if (INVALID_HANDLE_VALUE == find) {
+        return 1;
+    }
+
+    WIN32_FIND_DATA ffd2;
+    HANDLE find2 = INVALID_HANDLE_VALUE;
+    do {
+        sprintf(path, "%s\\IBM\\ILOG\\%s\\cplex\\bin\\x64_win64\\cplex????.dll", prgm, ffd.cFileName);
+        find2 = FindFirstFile(path, &ffd2);
+        if (INVALID_HANDLE_VALUE == find2) {
+            continue;
+        }
+        do {
+            if (13 == strlen(ffd2.cFileName)) {
+                sprintf(path, "%s\\IBM\\ILOG\\%s\\cplex\\bin\\x64_win64\\%s", prgm, ffd.cFileName, ffd2.cFileName);
+                if (try_lazy_load(path, min_version) == 0) {
+                    FindClose(find2);
+                    FindClose(find2);
+                    return 0;
+                }
+            }
+        } while (FindNextFile (find2, &ffd2) != 0);
+        FindClose(find2);
+    } while (FindNextFile (find, &ffd) != 0);
+    FindClose(find2);
+    return 1;
+#else
+    glob_t globs;
+	memset(&globs, 0, sizeof globs);
+	glob(DEFAULT_INSTALL_PATH_UNIX, GLOB_BRACE, NULL, &globs);
+
+	for (int i = globs.gl_pathc - 1; i >= 0;  i--) {
+		if (try_lazy_load(globs.gl_pathv[i], min_version)) == 0) {
+            globfree(&globs);
+            return 0;
+        }
+	}
+
+	globfree(&globs);
+    return 1;
+#endif
+}
+
 // load a symbol with the given name
 void* load_symbol(const char *name)
 {
@@ -236,3 +298,29 @@ void default_failure_callback(const char* symbol, void* cb_data)
     abort();
 }
 
+#ifdef AUTOMATIC_LOAD
+#if defined(_MSC_VER)
+    #pragma section(".CRT$XCU",read)
+    #define INITIALIZER2_(f,p) \
+        static void f(void); \
+        __declspec(allocate(".CRT$XCU")) void (*f##_)(void) = f; \
+        __pragma(comment(linker,"/include:" p #f "_")) \
+        static void f(void)
+    #ifdef _WIN64
+        #define INITIALIZER(f) INITIALIZER2_(f,"")
+    #else
+        #define INITIALIZER(f) INITIALIZER2_(f,"_")
+    #endif
+#elif defined(GCC)
+    static void f(void) __attribute__((constructor)); \
+    static void f(void)
+#else
+    #error "Compiler not supported"
+#endif
+
+INITIALIZER( initialize)
+{
+    PRINT_DEBUG("Init lazyloader\n");
+    initialize_lazy_loader(12060000);
+}
+#endif

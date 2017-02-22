@@ -9,11 +9,7 @@ version of CPLEX into the program, and therefore avoiding licensing issues.
 ## Example
 See example/example.c
 
-## Todo
-* Better detection of installed CPLEX Software
-* Option to create a library that uses some kind of autoinitialization
-
-## Notes
+## Acknowledgements
 This project is somewhat similar to
 https://github.com/chmduquesne/lazylpsolverlibs
 but, we use a faster generator (written in Python) and support for the

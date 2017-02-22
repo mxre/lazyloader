@@ -39,6 +39,10 @@ int initialize_lazy_loader(int min_version);
 // returns 0 on success
 int try_lazy_load(const char* library, int min_version);
 
+// try to detect default installation path
+// returns 0 on success
+int try_detect_library(int min_version);
+
 // set error callback
 void set_lazyloader_error_callback(void (*f)(const char *err, void* cb_data), void* cb_data);
 
