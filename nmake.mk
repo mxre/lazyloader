@@ -71,18 +71,18 @@ generated/cplexx.h: generated/cplex.h generated/cplexs.h generated/cplexl.h
 
 generated/loader_g.c: include/lazyloader.h stublib.py
 	@-md generated > NUL
-	python3 stublib.py -p -o $@ \
+	python stublib.py -p -o $@ \
 		-l $(LIBRARY_NAMES) \
 		-e CPLEX_DLL
 
 generated/cplex.c: generated/cplex.h generated/cpxconst.h stublib.py
-	python3 stublib.py -i generated/cplex.h -o generated
+	python stublib.py -i generated/cplex.h -o generated
 
 generated/cplexs.c: generated/cplexs.h generated/cpxconst.h stublib.py
-	python3 stublib.py -i generated/cplexs.h -o generated
+	python stublib.py -i generated/cplexs.h -o generated
 
 generated/cplexl.c: generated/cplexl.h generated/cpxconst.h stublib.py
-	python3 stublib.py -i generated/cplexl.h -o generated
+	python stublib.py -i generated/cplexl.h -o generated
 
 {generated}.c{generated}.obj:
 	cl -Iinclude/ -I. -nologo $(CFLAGS) -Fo:generated\ -c $<

@@ -27,6 +27,25 @@ See example/example.c
   set the loader library. Note that if automatic loading is enabled, in the library,
   another library can only be loaded, if the automatic loading failed.
 
+## Todo
+* Windows nmake needs a better detection for which object files need to be built.
+  Currently this list is statically writen into the Makefile, and probably only valid
+  for CPLEX 12.6.3
+
+## Requirements
+* For Linux nothing special is required, besides a CPLEX installation (we need the header files)
+  to generate the source stubs and a recent C compiler (like GCC or clang) and Python 3
+* For Windows we used Microsoft's Visual C Compiler 19 (Visual Studio 14),
+  and Windows SDK 10. As a runtime library we default to using the Universal C Runtime,
+  and a statically linked Visual Studio Core Runtime. (thus avoiding the need to provide a
+  Visual Studio Redistributable CRT on a deployment system).
+  Futhermore bash (i.e. from Windows Subsystem for Linux) with gcc and Python3 are required
+  to generate the header stubs from a CPLEX installation.
+
+Generated headers and source stubs are identical for Windows and Linux, and can be shared.
+This is especially interresting, as genrerating them under Windows can be somewhat harder than
+under Linux.
+
 ## Acknowledgements
 This project is somewhat similar to
 https://github.com/chmduquesne/lazylpsolverlibs
