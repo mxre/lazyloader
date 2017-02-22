@@ -246,7 +246,7 @@ int try_detect_library(int min_version)
 	glob(DEFAULT_INSTALL_PATH_UNIX, GLOB_BRACE, NULL, &globs);
 
 	for (int i = globs.gl_pathc - 1; i >= 0;  i--) {
-		if (try_lazy_load(globs.gl_pathv[i], min_version)) == 0) {
+		if (try_lazy_load(globs.gl_pathv[i], min_version) == 0) {
             globfree(&globs);
             return 0;
         }
@@ -311,14 +311,14 @@ void default_failure_callback(const char* symbol, void* cb_data)
     #else
         #define INITIALIZER(f) INITIALIZER2_(f,"_")
     #endif
-#elif defined(GCC)
-    static void f(void) __attribute__((constructor)); \
-    static void f(void)
+#elif defined(__GNUC__)
+	#define INITIALIZER(f) \
+	__attribute__((constructor)) static void f(void)
 #else
     #error "Compiler not supported"
 #endif
 
-INITIALIZER( initialize)
+INITIALIZER(initialize)
 {
     PRINT_DEBUG("Init lazyloader\n");
     initialize_lazy_loader(12060000);
