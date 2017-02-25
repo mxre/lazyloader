@@ -39,8 +39,8 @@ See example/example.c
   Visual Studio Redistributable CRT on a deployment system), cf:
   - https://blogs.msdn.microsoft.com/vcblog/2015/03/03/introducing-the-universal-crt/
   - http://stackoverflow.com/questions/35805113/visual-studio-2015-run-time-dependencies-or-how-to-get-rid-of-universal-crt
-  Futhermore bash (i.e. from Windows Subsystem for Linux) with gcc and Python3 are required
-  to generate the header stubs from a CPLEX installation.
+  - Futhermore bash (i.e. from Windows Subsystem for Linux) with gcc and Python3 are required
+    to generate the header stubs from a CPLEX installation.
 
 Generated headers and source stubs are identical for Windows and Linux, and can be shared.
 This is especially interresting, as generating them under Windows can be somewhat harder than
