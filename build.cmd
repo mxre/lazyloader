@@ -16,6 +16,9 @@ if errorlevel 1 (
 	goto end
 )
 
+where python
+if errorlevel 0 goto python_found
+
 for /F "tokens=1" %%i in ('reg query "HKLM\Software\Python\PythonCore"') do (
         set PythonRegistry=%%i
 	)
@@ -28,6 +31,8 @@ if "%PythonPath%"=="" (
 	echo Could not detect Python3 installation
 	goto end
 )
+echo Detected Python: %PythonPath%
+:python_found
 
 set "PATH=%PythonPath%;%UniversalCRTSdkDir%bin\x64;%VSINSTALLDIR%VC\bin\amd64;%PATH%"
 set "LIB=%UniversalCRTSdkDir%lib\%UCRTVersion%\ucrt\x64;%UniversalCRTSdkDir%lib\%UCRTVersion%\um\x64;%VSINSTALLDIR%VC\lib\amd64"

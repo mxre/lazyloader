@@ -6,6 +6,7 @@ CFLAGS =-MT -Ox -D_WIN32_WINNT=0x0A00 -DBUILD_CPXSTATIC=1
 LDFLAGS =-subsystem:console -nodefaultlib:libucrt.lib ucrt.lib
 
 .PHONY: all
+.SUFFIX:
 
 all: example.exe
 

@@ -1,0 +1,19 @@
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[{*.py, *.c}]
+indent_style = space
+indent_size = 4
+
+[{Makefile,*.mk}]
+indent_size = tab
+
+[*.sh}]
+end_of_line = lf
+
+[*.cmd,*.bat}]
+end_of_line = lf
+indent_size = tab

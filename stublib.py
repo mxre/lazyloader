@@ -33,6 +33,7 @@
 #
 
 import re, sys, getopt
+import os
 
 def write_loader(out, libnames, env):
     out.write('#define DEBUG_ENVIRONMENT_VARIABLE "LAZYLOAD_DEBUG"\n')
@@ -178,15 +179,17 @@ def usage():
     print("-p don't parse include, write loader")
     print("-l names of the libraries to try (without lib prefix and suffix)")
     print("-e name of an environment variable that will be considered when loading libraries")
+    print("-m generate makefile dependencies (only for windows)")
 
 if __name__ == "__main__":
     include = None
     env = None
     libnames = None
     outfile = None
+    makefile = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hi:l:e:o:p")
+        opts, args = getopt.getopt(sys.argv[1:], "hi:l:e:o:pm")
     except getopt.GetoptError:
         usage()
         sys.exit(1)
@@ -205,6 +208,8 @@ if __name__ == "__main__":
             outfile = a
         elif o == "-p":
             loader = True
+        elif o == "-m":
+            makefile = True
         else:
             assert False, "unhandled option: {}".format(o)
 
@@ -216,6 +221,11 @@ if __name__ == "__main__":
         with open(outfile, "w", encoding='utf_8', newline='\n') as w:
             write_loader(w, libnames, env)
     else:
+        if makefile:
+            filename = os.path.splitext(os.path.basename(include))[0]
+            mf = open("{}/{}.mk".format(outfile, filename),"w", encoding='utf_8', newline='\n')
+            mf.write("CFLAGS = -Fo:{0}/ -nologo -Iinclude -I. -MT -Ox\n\n".format(outfile))
+            mf.write("all: ")
         with open(include) as header:
             f = header.read()
             f = re.sub(r"\\\n", "", f)
@@ -239,5 +249,10 @@ if __name__ == "__main__":
                     symbol_declaration(line, name, w)
                     function_from_line(line, name, w)
                     w.write("\n")
+                if makefile:
+                    mf.write("{0}/{1}.obj ".format(outfile, name))
+            if makefile:
+                mf.write("\n")
+                mf.close()
 #            for line in f.splitlines():
 #               function_from_line(line, w)
