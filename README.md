@@ -30,11 +30,6 @@ See example/example.c
   of an executable that is linked with this library since only required object files need to
   be included.
 
-## Todo
-* Windows nmake needs a better detection for which object files need to be built.
-  Currently this list is statically writen into the Makefile, and probably only valid
-  for CPLEX 12.6.3
-
 ## Requirements
 * For Linux nothing special is required, besides a CPLEX installation (we need the header files)
   to generate the source stubs and a recent C compiler (like GCC or clang) and Python 3

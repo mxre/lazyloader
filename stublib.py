@@ -224,7 +224,7 @@ if __name__ == "__main__":
         if makefile:
             filename = os.path.splitext(os.path.basename(include))[0]
             mf = open("{}/{}.mk".format(outfile, filename),"w", encoding='utf_8', newline='\n')
-            mf.write("CFLAGS = -Fo:{0}/ -nologo -Iinclude -I. -MT -Ox\n\n".format(outfile))
+            mf.write("CFLAGS = -MP -Fo:{0}/ -nologo -Iinclude -I. -MT -Ox\n\n".format(outfile))
             mf.write("all: ")
         with open(include) as header:
             f = header.read()
