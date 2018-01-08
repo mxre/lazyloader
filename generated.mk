@@ -33,7 +33,7 @@
 SRCS := $(wildcard *.c)
 OBJS := $(SRCS:.c=.o)
 
-CFLAGS=-DAUTOMATIC_LOAD=1 -O3 -fPIC
+CFLAGS=-O3 -fPIC
 
 all: $(OBJS)
 

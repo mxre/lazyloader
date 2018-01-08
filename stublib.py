@@ -32,8 +32,7 @@
 # see http://www.opensource.org/licenses/MIT
 #
 
-import re, sys, getopt
-import os
+import re, sys, getopt, os
 
 def write_loader(out, libnames, env):
     out.write('#define DEBUG_ENVIRONMENT_VARIABLE "LAZYLOAD_DEBUG"\n')
@@ -186,10 +185,10 @@ if __name__ == "__main__":
     env = None
     libnames = None
     outfile = None
-    makefile = False
+    textfile = None
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hi:l:e:o:pm")
+        opts, args = getopt.getopt(sys.argv[1:], "hi:l:e:o:pmt")
     except getopt.GetoptError:
         usage()
         sys.exit(1)
@@ -210,6 +209,8 @@ if __name__ == "__main__":
             loader = True
         elif o == "-m":
             makefile = True
+        elif o == "-t":
+            textfile = True
         else:
             assert False, "unhandled option: {}".format(o)
 
@@ -243,7 +244,7 @@ if __name__ == "__main__":
             # a.close()
             for line in f.splitlines():
                 name = function_name(line)
-                of = "{}/{}.c".format(outfile, name);
+                of = "{}/{}.c".format(outfile, name)
                 with open(of, "w", encoding='utf_8', newline='\n') as w:
                     write_loader_prelude(w, include)
                     symbol_declaration(line, name, w)
@@ -254,5 +255,17 @@ if __name__ == "__main__":
             if makefile:
                 mf.write("\n")
                 mf.close()
+            if textfile:
+                basename = os.path.splitext(os.path.basename(include))[0]
+                of = "{}/{}.objects".format(outfile, basename)
+                with open(of, "w", encoding='utf_8', newline='\n') as w:
+                    for line in f.splitlines():
+                        name = function_name(line)
+                        w.write("{}/{}.obj\n".format(outfile, name))
+                of = "{}/{}.sources".format(outfile, basename)
+                with open(of, "w", encoding='utf_8', newline='\n') as w:
+                    for line in f.splitlines():
+                        name = function_name(line)
+                        w.write("{}/{}.c\n".format(outfile, name))
 #            for line in f.splitlines():
 #               function_from_line(line, w)

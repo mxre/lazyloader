@@ -72,7 +72,7 @@ static void* callback_data = NULL;
     fprintf(stderr, "\n(%s): " fmt, __FUNCTION__, ## args );
 #endif
 
-// platfrom macros
+// platform macros
 #ifdef _WIN32
 #define SYMBOL(name) GetProcAddress(handle, name)
 #else
@@ -297,30 +297,3 @@ void default_failure_callback(const char* symbol, void* cb_data)
     PRINT_ERR("the symbol %s could not be found!\n", symbol);
     abort();
 }
-
-#ifdef AUTOMATIC_LOAD
-#if defined(_MSC_VER)
-    #pragma section(".CRT$XCU",read)
-    #define INITIALIZER2_(f,p) \
-        static void f(void); \
-        __declspec(allocate(".CRT$XCU")) void (*f##_)(void) = f; \
-        __pragma(comment(linker,"/include:" p #f "_")) \
-        static void f(void)
-    #ifdef _WIN64
-        #define INITIALIZER(f) INITIALIZER2_(f,"")
-    #else
-        #define INITIALIZER(f) INITIALIZER2_(f,"_")
-    #endif
-#elif defined(__GNUC__)
-	#define INITIALIZER(f) \
-	__attribute__((constructor)) static void f(void)
-#else
-    #error "Compiler not supported"
-#endif
-
-INITIALIZER(initialize)
-{
-    PRINT_DEBUG("Init lazyloader\n");
-    initialize_lazy_loader(12060000);
-}
-#endif

@@ -1,9 +1,9 @@
 
 INCLUDES=-I"$(CPLEX_STUDIO_DIR1263)/cplex/include" -I../include
-LIBS=-LIBPATH:..\lib cplex.lib
+LIBS=-LIBPATH:..\lib cplex.lib cplex_auto.lib
 
-CFLAGS =-MT -Ox -D_WIN32_WINNT=0x0A00 -DBUILD_CPXSTATIC=1
-LDFLAGS =-subsystem:console -nodefaultlib:libucrt.lib ucrt.lib
+CFLAGS =-MD -Ox -D_WIN32_WINNT=0x0601 -DBUILD_CPXSTATIC=1
+LDFLAGS =-subsystem:console 
 
 .PHONY: all
 .SUFFIX:

@@ -13,6 +13,8 @@ See example/example.c
 * The example uses automatic loading and detection.
   This means, the source code does not have any reference
   to the loader.
+* To use the automatic CPLEX loader the additional library
+  `cplex_auto.lib` has to be linked to the program
 * The loader tries to find the library in the following paths:
   * A library provided in the environement variable `$CPLEX_DLL`,
     this has to be a absolute path to library.
@@ -34,13 +36,9 @@ See example/example.c
 * For Linux nothing special is required, besides a CPLEX installation (we need the header files)
   to generate the source stubs and a recent C compiler (like GCC or clang) and Python 3
 * For Windows we used Microsoft's Visual C Compiler 19 (Visual Studio 14),
-  and Windows SDK 10. As a runtime library we default to using the Universal C Runtime,
-  and a statically linked Visual Studio Core Runtime. (thus avoiding the need to provide a
-  Visual Studio Redistributable CRT on a deployment system), cf:
-  - https://blogs.msdn.microsoft.com/vcblog/2015/03/03/introducing-the-universal-crt/
-  - http://stackoverflow.com/questions/35805113/visual-studio-2015-run-time-dependencies-or-how-to-get-rid-of-universal-crt
-  - Futhermore bash (i.e. from Windows Subsystem for Linux) with gcc and Python3 are required
-    to generate the header stubs from a CPLEX installation.
+  and Windows SDK 10.
+  Futhermore bash (i.e. from Windows Subsystem for Linux) with gcc and Python3 are required
+  to generate the header stubs from a CPLEX installation.
 
 Generated headers and source stubs are identical for Windows and Linux, and can be shared.
 This is especially interresting, as generating them under Windows can be somewhat harder than

@@ -67,5 +67,11 @@ lib/libcplex.a: generate
 	@test -d lib/ || mkdir lib
 	mv generated/libcplex.a $@
 
+generated/auto.o: src/auto.c
+	gcc -Iinclude/ -c $< -o $@ -O3 -fPIC
+
+lib/libcplex_auto.a: generated/auto.o
+	ar rcs $@ $^
+
 clean:
 	rm -fr lib/ generated/
