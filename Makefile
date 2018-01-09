@@ -36,15 +36,11 @@ all: lib/libcplex.a lib/cplex_auto.o
 #CPLEX_PATH=/opt/ibm/ILOG/CPLEX_Studio127/cplex
 CPLEX_PATH=${CPLEX_DIR}/cplex
 
+CFLAGS=-O3 -fPIC -I../include -I../ -I$(CPLEX_PATH)/cplex/include/ilcplex
+export CFLAGS
+
 # Possible Library names, to search for at runtime
 LIBRARY_NAMES=cplex1270,cplex1263,cplex1262,cplex1261,cplex1260,cplex125,cplex124,cplex123
-
-generated/%.h: $(CPLEX_PATH)/include/ilcplex/%.h filter_header.sh
-	@test -d generated/ || mkdir generated
-	./filter_header.sh $< $@
-
-generated/cplexx.h: generated/cplex.h generated/cplexl.h generated/cplexs.h
-	cat $^ > $@
 
 generated/loader_g.c: include/lazyloader.h stublib.py
 	@test -d generated/ || mkdir generated
@@ -52,7 +48,7 @@ generated/loader_g.c: include/lazyloader.h stublib.py
 		-l $(LIBRARY_NAMES) \
 		-e CPLEX_DLL
 
-generated/%.c: generated/%.h generated/cpxconst.h stublib.py
+generated/%.c: $(CPLEX_PATH)/include/ilcplex/%.h stublib.py
 	python3 stublib.py -i $< -o $(@D)
 	@touch $@
 
@@ -60,7 +56,7 @@ generated/Makefile: generated.mk
 	cp generated.mk generated/Makefile
 
 generate: generated/loader_g.c generated/cplex.c generated/cplexs.c generated/cplexl.c src/loader.h generated/Makefile
-	make -j20 -C generated all
+	make -j20 -e -C generated all
 
 lib/libcplex.a: generate
 	make -C generated libcplex.a
@@ -68,7 +64,7 @@ lib/libcplex.a: generate
 	mv generated/libcplex.a $@
 
 lib/cplex_auto.o: src/auto.c
-	gcc -Iinclude/ -c $< -o $@ -O3 -fPIC
+	$(CC) -Iinclude/ -c $< -o $@ $(CFLAGS)
 
 clean:
 	rm -fr lib/ generated/

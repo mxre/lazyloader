@@ -36,12 +36,24 @@
 #include <stdbool.h>
 #ifdef _WIN32
 #include <windows.h>
+#include <wchar.h>
 #else
 #include <dlfcn.h>
 #include <glob.h>
 #endif
 #include "loader.h"
 #include "lazyloader.h"
+
+// platform macros
+#ifdef _WIN32
+#define SYMBOL(name) GetProcAddress(handle, name)
+#define OPEN(library) LoadLibraryW(library)
+#define FREE FreeLibrary(handle)
+#else // unix
+#define SYMBOL(name) dlsym(handle, name)
+#define OPEN(library) dlopen(library, RTLD_LAZY)
+#define FREE dlclose(handle)
+#endif // _WIN32
 
 #define DEFAULT_INSTALL_PATH_UNIX "/opt/ibm/ILOG/CPLEX_Studio{???,????}/cplex/bin/*/libcplex{???,????}.so"
 
@@ -72,29 +84,12 @@ static void* callback_data = NULL;
     fprintf(stderr, "\n(%s): " fmt, __FUNCTION__, ## args );
 #endif
 
-// platform macros
-#ifdef _WIN32
-#define SYMBOL(name) GetProcAddress(handle, name)
-#else
-#define SYMBOL(name) dlsym(handle, name)
-#endif
-#ifdef _WIN32
-#define FREE FreeLibrary(handle)
-#else
-#define FREE dlclose(handle)
-#endif
-#ifdef _WIN32
-#define OPEN(library) LoadLibrary(library)
-#else
-#define OPEN(library) dlopen(library, RTLD_LAZY)
-#endif
-
 // handle of the loaded library
 static void* handle = NULL;
 
 static bool debug_enabled = false;
 
-int try_lazy_load(const char* library, int min_version)
+int try_lazy_load(__LPCSTR library, int min_version)
 {
     const char *dbg = getenv(DEBUG_ENVIRONMENT_VARIABLE);
     debug_enabled = (dbg != NULL && strlen(dbg) > 0);
@@ -104,7 +99,11 @@ int try_lazy_load(const char* library, int min_version)
         return 0;
     }
 
+#ifdef _WIN32
+    PRINT_DEBUG("Trying to load %ls", library);
+#else
     PRINT_DEBUG("Trying to load %s", library);
+#endif
     handle = OPEN(library);
     if (handle == NULL) {
         //PRINT_DEBUG("Failed.\n");
@@ -201,43 +200,44 @@ int test_library(int min_version)
 int try_detect_library(int min_version)
 {
 #ifdef _WIN32
-    char* prgm = getenv("PROGRAMFILES");
+    wchar_t* prgm = _wgetenv(L"PROGRAMFILES");
     if (NULL == prgm) {
         PRINT_ERR("Could not retrieve %%PROGRAMFILES%% from environment.\n");
         return 1;
     }
-
-    char path[MAX_PATH];
-    strcpy(path, prgm);
-    strcat(path, "\\IBM\\ILOG\\CPLEX_Studio*");
-    WIN32_FIND_DATA ffd;
+    // windows NT max pathlength
+#define _NT_MAX_PATH 32767
+    wchar_t path[_NT_MAX_PATH];
+    // long windows UNC names begin with \\?\ allowing more than 260 chars in path
+    swprintf(path, _NT_MAX_PATH, L"\\\\?\\%s\\IBM\\ILOG\\CPLEX_Studio*", prgm);
+    WIN32_FIND_DATAW ffd;
     HANDLE find = INVALID_HANDLE_VALUE;
-
-     find = FindFirstFileEx(path, FindExInfoBasic, &ffd, FindExSearchNameMatch, NULL, 0);
+    find = FindFirstFileExW(path, FindExInfoBasic, &ffd, FindExSearchNameMatch, NULL, 0);
     if (INVALID_HANDLE_VALUE == find) {
         return 1;
     }
 
-    WIN32_FIND_DATA ffd2;
+    WIN32_FIND_DATAW ffd2;
     HANDLE find2 = INVALID_HANDLE_VALUE;
     do {
-        sprintf(path, "%s\\IBM\\ILOG\\%s\\cplex\\bin\\x64_win64\\cplex????.dll", prgm, ffd.cFileName);
-        find2 = FindFirstFile(path, &ffd2);
+        swprintf(path, _NT_MAX_PATH, L"\\\\?\\%s\\IBM\\ILOG\\%s\\cplex\\bin\\x64_win64\\cplex????.dll", prgm, ffd.cFileName);
+        find2 = FindFirstFileW(path, &ffd2);
         if (INVALID_HANDLE_VALUE == find2) {
             continue;
         }
         do {
-            if (13 == strlen(ffd2.cFileName)) {
-                sprintf(path, "%s\\IBM\\ILOG\\%s\\cplex\\bin\\x64_win64\\%s", prgm, ffd.cFileName, ffd2.cFileName);
+            // filter out cplex net dlls
+            if (13 == wcslen(ffd2.cFileName)) {
+                swprintf(path, _NT_MAX_PATH, L"\\\\?\\%s\\IBM\\ILOG\\%s\\cplex\\bin\\x64_win64\\%s", prgm, ffd.cFileName, ffd2.cFileName);
                 if (try_lazy_load(path, min_version) == 0) {
                     FindClose(find2);
                     FindClose(find2);
                     return 0;
                 }
             }
-        } while (FindNextFile (find2, &ffd2) != 0);
+        } while (FindNextFileW(find2, &ffd2) != 0);
         FindClose(find2);
-    } while (FindNextFile (find, &ffd) != 0);
+    } while (FindNextFileW(find, &ffd) != 0);
     FindClose(find2);
     return 1;
 #else

@@ -31,13 +31,20 @@
  * see http://www.opensource.org/licenses/MIT
  */
 
+#ifdef _WIN32
+#include <wchar.h>
+#define __LPCSTR const wchar_t*
+#else
+#define __LPCSTR const char*
+#endif
+
 // try to load from a list of predifined library names
 // returns 0 on success
 int initialize_lazy_loader(int min_version);
 
 // try to load one library (use instead of initalize)
 // returns 0 on success
-int try_lazy_load(const char* library, int min_version);
+int try_lazy_load(__LPCSTR library, int min_version);
 
 // try to detect default installation path
 // returns 0 on success

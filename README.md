@@ -6,6 +6,12 @@ CPLEX library during runtime, as opposed during linktime (or program load,
 when using the dynamic linker). Thus eliminating the need to link a static
 version of CPLEX into the program, and therefore avoiding licensing issues.
 
+This static library supports the standard C CPLEX API, (functions beginning with `CPX`)
+and the more modern `CPXX` functions defined in `cplexx.h`, which are actually macros
+directing to either `CPXS` or `CPXL` functions.
+
+Unsupported are all functions marked with ``CPXDEPRECATEDAPI` in the headers.
+
 ## Example
 See example/example.c
 
@@ -37,8 +43,7 @@ See example/example.c
   to generate the source stubs and a recent C compiler (like GCC or clang) and Python 3
 * For Windows we used Microsoft's Visual C Compiler 19 (Visual Studio 14),
   and Windows SDK 10.
-  Futhermore bash (i.e. from Windows Subsystem for Linux) with gcc and Python3 are required
-  to generate the header stubs from a CPLEX installation.
+  Futhermore Python3 is required to generate the source stubs from the CPLEX header files.
 
 Generated headers and source stubs are identical for Windows and Linux, and can be shared.
 This is especially interresting, as generating them under Windows can be somewhat harder than

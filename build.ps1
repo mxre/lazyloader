@@ -71,9 +71,13 @@ $env:LIB     = "${env:UniversalCRTSdkDir}lib\$env:UCRTVersion\ucrt\x64;${env:Uni
 $env:LIBPATH = "${env:VSINSTALLDIR}VC\lib\amd64"
 $env:INCLUDE = "${env:UniversalCRTSdkDir}Include\$env:UCRTVersion\ucrt;${env:UniversalCRTSdkDir}Include\$env:UCRTVersion\um;${env:UniversalCRTSdkDir}Include\$env:UCRTVersion\shared;${env:VSINSTALLDIR}VC\include"
 
-New-Item -ItemType Directory generated
-New-Item -ItemType Directory lib
+if (-not (Test-Path -PathType Container generated)) {
+	New-Item -ItemType Directory generated
+}
+if (-not (Test-Path -PathType Container lib)) {
+	New-Item -ItemType Directory lib
+}
 
-& nmake /f nmake.mk
+& nmake /f nmake.mk $args[0]
 
 $env:PATH=$oldpath

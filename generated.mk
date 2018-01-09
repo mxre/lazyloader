@@ -33,12 +33,12 @@
 SRCS := $(wildcard *.c)
 OBJS := $(SRCS:.c=.o)
 
-CFLAGS=-O3 -fPIC
-
 all: $(OBJS)
 
 %.o : %.c
-	gcc -I../include/ -I. -I.. -c $< -o $@ $(CFLAGS)
+	@echo "CC    $<"
+	@$(CC) -c $< -o $@ $(CFLAGS)
 
 libcplex.a: $(OBJS)
-	ar rcs $@ $^
+	@echo "AR    $@"
+	@$(AR) rcs $@ $^

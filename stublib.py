@@ -36,7 +36,11 @@ import re, sys, getopt, os
 
 def write_loader(out, libnames, env):
     out.write('#define DEBUG_ENVIRONMENT_VARIABLE "LAZYLOAD_DEBUG"\n')
+    out.write('#ifdef _WIN32\n')
+    out.write('#define LOADER_ENVIRONMENT_VARIABLE L"{}"\n'.format(env))
+    out.write('#else\n')
     out.write('#define LOADER_ENVIRONMENT_VARIABLE "{}"\n'.format(env))
+    out.write('#endif\n')
     out.write('#include "src/loader.c"\n')
     out.write(r'''
 int initialize_lazy_loader(int min_version) {
@@ -49,15 +53,20 @@ int initialize_lazy_loader(int min_version) {
     }
 
     int i;
+#ifdef _WIN32
+    wchar_t* s = _wgetenv(LOADER_ENVIRONMENT_VARIABLE);
+    const wchar_t* libnames[] = {
+        L""
+        L"",
+''')
+    for name in libnames:
+        out.write('        L"{}.dll",\n'.format(name))
+    out.write('''#else
     char* s = getenv(LOADER_ENVIRONMENT_VARIABLE);
     const char* libnames[] = {
         ""
         "",
-#ifdef _WIN32
 ''')
-    for name in libnames:
-        out.write('        "{}.dll",\n'.format(name))
-    out.write("#else\n")
     for name in libnames:
         out.write('        "lib{}.so",\n'.format(name))
     out.write(r'''
@@ -68,7 +77,7 @@ int initialize_lazy_loader(int min_version) {
 
     PRINT_DEBUG("Looking for a suitable library.\n");
     for (i = 0; libnames[i] != NULL; i++) {
-        if (strlen(libnames[i]) == 0) {
+        if (libnames[i][0] == 0) {
             continue;
         }
         if (try_lazy_load(libnames[i], min_version) == 0) {
@@ -178,7 +187,7 @@ def usage():
     print("-p don't parse include, write loader")
     print("-l names of the libraries to try (without lib prefix and suffix)")
     print("-e name of an environment variable that will be considered when loading libraries")
-    print("-m generate makefile dependencies (only for windows)")
+    print("-t generate a text file containing all generated objects and c files (for windows)")
 
 if __name__ == "__main__":
     include = None
@@ -189,7 +198,7 @@ if __name__ == "__main__":
     makefile = None
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hi:l:e:o:pmt")
+        opts, args = getopt.getopt(sys.argv[1:], "hi:l:e:o:pt")
     except getopt.GetoptError:
         usage()
         sys.exit(1)
@@ -208,8 +217,6 @@ if __name__ == "__main__":
             outfile = a
         elif o == "-p":
             loader = True
-        elif o == "-m":
-            makefile = True
         elif o == "-t":
             textfile = True
         else:
@@ -225,11 +232,9 @@ if __name__ == "__main__":
     else:
         if makefile:
             filename = os.path.splitext(os.path.basename(include))[0]
-            mf = open("{}/{}.mk".format(outfile, filename),"w", encoding='utf_8', newline='\n')
-            mf.write("CFLAGS = -MP -Fo:{0}/ -nologo -Iinclude -I. -MT -Ox\n\n".format(outfile))
-            mf.write("all: ")
         with open(include) as header:
             f = header.read()
+            f = re.sub(r"CPXDEPRECATEDAPI\([0-9]{8}\)", "", f)
             f = re.sub(r"\\\n", "", f)
             f = re.sub(r"#.*\n", "", f)
             f = re.sub(r"[{}]", "", f)
@@ -245,17 +250,15 @@ if __name__ == "__main__":
             # a.close()
             for line in f.splitlines():
                 name = function_name(line)
+                if name == None:
+                    # print(line)
+                    continue
                 of = "{}/{}.c".format(outfile, name)
                 with open(of, "w", encoding='utf_8', newline='\n') as w:
                     write_loader_prelude(w, include)
                     symbol_declaration(line, name, w)
                     function_from_line(line, name, w)
                     w.write("\n")
-                if makefile:
-                    mf.write("{0}/{1}.obj ".format(outfile, name))
-            if makefile:
-                mf.write("\n")
-                mf.close()
             if textfile:
                 basename = os.path.splitext(os.path.basename(include))[0]
                 of = "{}/{}.objects".format(outfile, basename)
@@ -268,5 +271,3 @@ if __name__ == "__main__":
                     for line in f.splitlines():
                         name = function_name(line)
                         w.write("{}/{}.c\n".format(outfile, name))
-#            for line in f.splitlines():
-#               function_from_line(line, w)

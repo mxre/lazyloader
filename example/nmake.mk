@@ -1,6 +1,6 @@
 
 INCLUDES=-I"$(CPLEX_STUDIO_DIR1263)/cplex/include" -I../include
-LIBS=-LIBPATH:..\lib cplex.lib cplex_auto.lib
+LIBS=-LIBPATH:..\lib cplex.lib ..\lib\cplex_auto.obj
 
 CFLAGS =-MD -Ox -D_WIN32_WINNT=0x0601 -DBUILD_CPXSTATIC=1
 LDFLAGS =-subsystem:console 
