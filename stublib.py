@@ -186,6 +186,7 @@ if __name__ == "__main__":
     libnames = None
     outfile = None
     textfile = None
+    makefile = None
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hi:l:e:o:pmt")

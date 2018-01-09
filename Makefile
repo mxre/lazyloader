@@ -30,7 +30,7 @@
 # see http://www.opensource.org/licenses/MIT
 #
 
-all: lib/libcplex.a
+all: lib/libcplex.a lib/cplex_auto.o
 
 # Source of the CPLEX header definitions 
 #CPLEX_PATH=/opt/ibm/ILOG/CPLEX_Studio127/cplex
@@ -67,11 +67,8 @@ lib/libcplex.a: generate
 	@test -d lib/ || mkdir lib
 	mv generated/libcplex.a $@
 
-generated/auto.o: src/auto.c
+lib/cplex_auto.o: src/auto.c
 	gcc -Iinclude/ -c $< -o $@ -O3 -fPIC
-
-lib/libcplex_auto.a: generated/auto.o
-	ar rcs $@ $^
 
 clean:
 	rm -fr lib/ generated/

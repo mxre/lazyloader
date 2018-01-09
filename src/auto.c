@@ -53,6 +53,6 @@
 
 INITIALIZER(initialize)
 {
-    PRINT_DEBUG("Init lazyloader\n");
+    //PRINT_DEBUG("Init lazyloader\n");
     initialize_lazy_loader(12060000);
 }
