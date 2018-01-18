@@ -10,7 +10,7 @@ This static library supports the standard C CPLEX API, (functions beginning with
 and the more modern `CPXX` functions defined in `cplexx.h`, which are actually macros
 directing to either `CPXS` or `CPXL` functions.
 
-Unsupported are all functions marked with ``CPXDEPRECATEDAPI` in the headers.
+Unsupported are all functions marked with `CPXDEPRECATEDAPI` in the headers.
 
 ## Example
 See example/example.c
